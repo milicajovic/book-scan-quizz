@@ -20,7 +20,7 @@
         </li>
       </ul>
       <ul class="navbar-nav">
-        {% if 'google_token' in session %}
+        {% if 'user_email' in session %}
           <li class="nav-item">
             <span class="navbar-text me-3">{{ session['user_email'] }}</span>
           </li>
