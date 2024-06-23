@@ -8,6 +8,9 @@ class Config:
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = 'audio_uploads'
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or "AIzaSyDQyT_XQpie3uGPa2DbYGf6yaNie0CzyV0"
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

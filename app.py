@@ -5,6 +5,8 @@ from authlib.integrations.base_client.errors import OAuthError
 from config import config
 import os
 from werkzeug.utils import secure_filename
+import google.generativeai as genai
+from transcribe import transcribe_audio
 
 db = SQLAlchemy()
 oauth = OAuth()
@@ -64,17 +66,29 @@ def evaluate_audio():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         audio_file.save(filepath)
 
-        # Here you would typically process the audio file
-        # For now, we'll just return a success message with the file path
-        return jsonify({
-            'result': 'Audio file saved successfully',
-            'filepath': filepath
-        })
+        try:
+            # Transcribe the audio using Gemini
+            transcription = transcribe_audio(filepath)
+
+            # Here you can add any additional processing or evaluation of the transcription
+
+            return jsonify({
+                'result':  transcription, # 'Audio processed successfully',
+                'transcription': transcription
+            })
+        except Exception as e:
+            return jsonify({'error': f'Error processing audio: {str(e)}'}), 500
+        finally:
+            # Optionally, remove the file after processing
+            os.remove(filepath)
 
 
 def create_app(config_name=None):
     app = Flask(__name__)
-    app.config['UPLOAD_FOLDER'] = 'audio_uploads'
+
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'default')
+
     config_name = config_name or os.getenv('FLASK_CONFIG', 'default')
     app.config.from_object(config[config_name])
 
