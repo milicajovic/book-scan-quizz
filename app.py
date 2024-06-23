@@ -1,6 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, session, request
+from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
+from authlib.integrations.base_client.errors import OAuthError
 from config import config
 import os
 
@@ -30,18 +31,22 @@ def logout():
     return redirect(url_for('home'))
 
 def authorized():
-    google = oauth.create_client('google')
-    token = google.authorize_access_token()
-    user_info = token.get('userinfo')
-    if user_info:
-        session['google_token'] = token
-        session['user_email'] = user_info['email']
-    return redirect(url_for('home'))
+    try:
+        google = oauth.create_client('google')
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        if user_info:
+            session['google_token'] = token
+            session['user_email'] = user_info['email']
+            flash('Successfully logged in!', 'success')
+        return redirect(url_for('home'))
+    except OAuthError as e:
+        flash('Failed to log in. Access was denied.', 'danger')
+        return redirect(url_for('home'))
 
 def create_app(config_name=None):
     app = Flask(__name__)
 
-    # Use the specified config_name, or default to the FLASK_CONFIG environment variable, or use 'default'
     config_name = config_name or os.getenv('FLASK_CONFIG', 'default')
     app.config.from_object(config[config_name])
 
@@ -66,7 +71,6 @@ def create_app(config_name=None):
 
     return app
 
-# This allows both "flask run" to work and "python app.py" to work
 app = create_app()
 
 if __name__ == '__main__':
