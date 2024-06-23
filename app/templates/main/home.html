@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Home - My Website{% endblock %}
-
 {% block content %}
 <h1>Welcome to My Website</h1>
-{% if 'google_token' in session %}
-    <p>Hello, {{ session['user_email'] }}! Thanks for logging in with Google.</p>
+
+{% if current_user.is_authenticated %}
+    <p>Hello, {{ current_user.email }}! Thanks for logging in with Google.</p>
 {% else %}
     <p>This is the home page of our mobile-first website. Feel free to explore other pages using the navigation menu.</p>
     <p>You can log in using your Google account to access more features.</p>
 {% endif %}
+
 {% endblock %}

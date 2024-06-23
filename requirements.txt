@@ -8,3 +8,4 @@ flask-sqlalchemy
 google-generativeai
 # psycopg2
 # mysqlclient
+flask-login
