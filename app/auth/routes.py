@@ -21,9 +21,11 @@ def logout():
 def authorized():
     token = oauth.google.authorize_access_token()
     user_info = token.get('userinfo')
+    print(f" token:{user_info} info:{user_info}" )
     if user_info:
         user = User(id=user_info['sub'], email=user_info['email'])
         login_user(user)
         session['user_email'] = user_info['email']  # Store email in session
-        flash('Logged in successfully.')
+        flash('Logged in successfully.', 'danger')
+        print("user loged in" + session['user_email'])
     return redirect(url_for('main.home'))
