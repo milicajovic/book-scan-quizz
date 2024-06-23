@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Quizz - My Website{% endblock %}
+
+{% block content %}
+<h1>Welcome to the Quizz Page</h1>
+<p>Press and hold the button to record your answer.</p>
+
+<div class="text-center my-4">
+    <button id="recordButton" class="btn btn-lg btn-success rounded-circle" style="width: 100px; height: 100px;">
+        Record
+    </button>
+</div>
+
+<div id="recordingFeedback" class="text-center my-2" style="display: none;">
+    Recording... <span id="recordingDuration">0</span>s
+</div>
+
+<div id="resultContainer" class="mt-4">
+    <h3>Result:</h3>
+    <p id="resultText"></p>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let startTime;
+
+const recordButton = document.getElementById('recordButton');
+const recordingFeedback = document.getElementById('recordingFeedback');
+const recordingDuration = document.getElementById('recordingDuration');
+const resultText = document.getElementById('resultText');
+
+recordButton.addEventListener('mousedown', startRecording);
+recordButton.addEventListener('mouseup', stopRecording);
+recordButton.addEventListener('mouseleave', stopRecording);
+
+function startRecording() {
+    audioChunks = [];
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+            startTime = Date.now();
+
+            mediaRecorder.addEventListener("dataavailable", event => {
+                audioChunks.push(event.data);
+            });
+
+            recordButton.classList.remove('btn-success');
+            recordButton.classList.add('btn-danger');
+            recordingFeedback.style.display = 'block';
+            updateRecordingDuration();
+        });
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        recordButton.classList.remove('btn-danger');
+        recordButton.classList.add('btn-success');
+        recordingFeedback.style.display = 'none';
+
+        mediaRecorder.addEventListener("stop", () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            sendAudioToServer(audioBlob);
+        });
+    }
+}
+
+function updateRecordingDuration() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        const duration = Math.floor((Date.now() - startTime) / 1000);
+        recordingDuration.textContent = duration;
+        setTimeout(updateRecordingDuration, 1000);
+    }
+}
+
+function sendAudioToServer(audioBlob) {
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.wav");
+
+    fetch('/evaluate_audio', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        resultText.textContent = data.result;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultText.textContent = 'An error occurred while processing the audio.';
+    });
+}
+</script>
+{% endblock %}

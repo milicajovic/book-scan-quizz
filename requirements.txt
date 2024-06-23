@@ -4,5 +4,7 @@ authlib
 requests
 python-dotenv
 flask-sqlalchemy
+# google-cloud-speech
+google-generativeai
 # psycopg2
 # mysqlclient
