@@ -1,22 +1,22 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{{ url_for('home') }}">My Website</a>
+    <a class="navbar-brand" href="{{ url_for('main.home') }}">My Website</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
+          <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('main.home') }}">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{{ url_for('about') }}">About</a>
+          <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{{ url_for('main.about') }}">About</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="{{ url_for('quizz') }}">Quizz</a>
+          <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="{{ url_for('quiz.index') }}">Quizz</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if active_page == 'contact' %}active{% endif %}" href="{{ url_for('contact') }}">Contact</a>
+          <a class="nav-link {% if active_page == 'contact' %}active{% endif %}" href="{{ url_for('main.contact') }}">Contact</a>
         </li>
       </ul>
       <ul class="navbar-nav">
@@ -25,11 +25,11 @@
             <span class="navbar-text me-3">{{ session['user_email'] }}</span>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
           </li>
         {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('login') }}">Login with Google</a>
+            <a class="nav-link" href="{{ url_for('auth.login') }}">Login with Google</a>
           </li>
         {% endif %}
       </ul>
