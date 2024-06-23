@@ -1,38 +1,47 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{{ url_for('main.home') }}">My Website</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('main.home') }}">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{{ url_for('main.about') }}">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="{{ url_for('quiz.index') }}">Quizz</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if active_page == 'contact' %}active{% endif %}" href="{{ url_for('main.contact') }}">Contact</a>
-        </li>
-      </ul>
-      <ul class="navbar-nav">
-        {% if 'user_email' in session %}
-          <li class="nav-item">
-            <span class="navbar-text me-3">{{ session['user_email'] }}</span>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-          </li>
-        {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('auth.login') }}">Login with Google</a>
-          </li>
-        {% endif %}
-      </ul>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('main.home') }}">My Website</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'home' %}active{% endif %}"
+                       href="{{ url_for('main.home') }}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'about' %}active{% endif %}"
+                       href="{{ url_for('main.about') }}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'services' %}active{% endif %}"
+                       href="{{ url_for('quiz.index') }}">Quizz</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'contact' %}active{% endif %}"
+                       href="{{ url_for('main.contact') }}">Contact</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        {% if current_user.picture %}
+                            <img src="{{ current_user.picture }}" alt="Profile" class="rounded-circle"
+                                 style="width: 24px; height: 24px; object-fit: cover;">
+                        {% endif %}
+                        <span class="navbar-text me-3">{{ session['user']['first_name'] }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>
