@@ -15,4 +15,4 @@ def init_oauth(app):
 
 def transcribe_audio(audio_file):
     # Your transcription logic here
-    pass
+    return "dummy result for now"
