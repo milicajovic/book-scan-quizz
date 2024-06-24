@@ -5,22 +5,11 @@ import uuid
 
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = 'user'
-
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    first_name = Column(String(255))
-    last_name = Column(String(255))
-    email = Column(String(255), unique=True)
-
-    quizzes = relationship("Quiz", back_populates="owner")
-    answers = relationship("Answer", back_populates="user")
-
 class Quiz(Base):
     __tablename__ = 'quiz'
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_owner_id = Column(Integer, ForeignKey('user.id'))
+    user_owner_id = Column(String(36), ForeignKey('user.id'))
     title = Column(String(255))
     created_date = Column(DateTime, default=func.now())
 
@@ -67,6 +56,5 @@ class PageScan(Base):
     quiz = relationship("Quiz", back_populates="page_scans")
     questions = relationship("Question", back_populates="page_scan")
 
-# Create the tables in the database
-engine = create_engine('sqlite:///quiz_system.db')
-Base.metadata.create_all(engine)
+# Note: We've removed the engine creation and table creation from here.
+# You should handle database initialization separately, typically in your app's initialization code.

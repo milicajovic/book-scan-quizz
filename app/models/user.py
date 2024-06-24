@@ -1,8 +1,19 @@
 from flask_login import UserMixin
+from sqlalchemy import Column, String
+from .. import db
+import uuid
 
-class User(UserMixin):
-    def __init__(self, id, email, first_name=None, last_name=None, picture=None):
-        self.id = id
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    first_name = Column(String(255))
+    last_name = Column(String(255))
+    email = Column(String(255), unique=True)
+    picture = Column(String(255))
+
+    def __init__(self, email, first_name=None, last_name=None, picture=None):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
@@ -10,9 +21,7 @@ class User(UserMixin):
 
     @staticmethod
     def get(user_id):
-        # This method is used by Flask-Login to reload the user object from the user ID stored in the session
-        # In a real application, you'd fetch this information from a database or session
-        return User(id=user_id, email=None)
+        return User.query.get(user_id)
 
     def to_dict(self):
         return {
@@ -25,10 +34,12 @@ class User(UserMixin):
 
     @staticmethod
     def from_dict(data):
-        return User(
-            id=data.get('id'),
+        user = User(
             email=data.get('email'),
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             picture=data.get('picture')
         )
+        if 'id' in data:
+            user.id = data['id']
+        return user
