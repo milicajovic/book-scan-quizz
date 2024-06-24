@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Edit Question for Quiz: {{ quiz.title }}</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.question_text.label }}
+            {{ form.question_text() }}
+        </div>
+        <div>
+            {{ form.answer.label }}
+            {{ form.answer() }}
+        </div>
+        <div>
+            {{ form.difficulty_level.label }}
+            {{ form.difficulty_level() }}
+        </div>
+        {{ form.submit() }}
+    </form>
+{% endblock %}
