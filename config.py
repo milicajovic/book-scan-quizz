@@ -10,7 +10,7 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'audio_uploads'
-    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or "AIzaSyDQyT_XQpie3uGPa2DbYGf6yaNie0CzyV0"
     SQLALCHEMY_ECHO = False  # Default to False, enable per environment as needed
 
     @staticmethod
