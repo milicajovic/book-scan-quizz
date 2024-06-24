@@ -157,7 +157,7 @@ function sendAudioToServer(audioBlob) {
     processingFeedback.style.display = 'block';
     disableButton();
 
-    fetch('/quiz/evaluate_audio', {
+    fetch('/answer/evaluate_audio', {
         method: 'POST',
         body: formData
     })

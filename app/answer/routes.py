@@ -2,12 +2,12 @@ from flask import render_template, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from transcribe import transcribe_audio
-from . import quiz
+from . import answer
 import os
 
-@quiz.route('/')
+@answer.route('/')
 def index():
-    return render_template('quiz/index.html')
+    return render_template('answer/index.html')
 
 def generate_timestamp_filename(original_filename):
     # Get current timestamp with milliseconds
@@ -18,7 +18,7 @@ def generate_timestamp_filename(original_filename):
     return f"{timestamp}{file_extension}"
 
 
-@quiz.route('/evaluate_audio', methods=['POST'])
+@answer.route('/evaluate_audio', methods=['POST'])
 def evaluate_audio():
     try:
         if 'audio' not in request.files:

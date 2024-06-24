@@ -1,13 +1,16 @@
+import logging
+import os
+
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
+
 from config import config
 from .utils import init_oauth, oauth
-import os
-import logging
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -34,7 +37,6 @@ def create_app(config_name=None):
     def load_user(user_id):
         return User.query.get(user_id)
 
-
     # Register blueprints
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
@@ -42,8 +44,8 @@ def create_app(config_name=None):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-    from .quiz import quiz as quiz_blueprint
-    app.register_blueprint(quiz_blueprint, url_prefix='/quiz')
+    from .answer import answer as quiz_blueprint
+    app.register_blueprint(quiz_blueprint, url_prefix='/answer')
 
     # Import and register the init-db command
     from .cli import init_db_command
