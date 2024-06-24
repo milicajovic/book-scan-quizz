@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from config import config
 from .utils import init_oauth, oauth
 import os
+import logging
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -18,6 +19,12 @@ def create_app(config_name=None):
     config[config_name].init_app(app)
 
     db.init_app(app)
+
+    if app.config['SQLALCHEMY_ECHO']:
+        # Set up SQLAlchemy query logging
+        logging.basicConfig()
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
     login_manager.init_app(app)
     init_oauth(app)
 
@@ -25,7 +32,8 @@ def create_app(config_name=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.get(user_id)
+        return User.query.get(user_id)
+
 
     # Register blueprints
     from .main import main as main_blueprint

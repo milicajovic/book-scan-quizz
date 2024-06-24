@@ -11,6 +11,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'audio_uploads'
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+    SQLALCHEMY_ECHO = False  # Default to False, enable per environment as needed
 
     @staticmethod
     def init_app(app):
@@ -20,10 +21,14 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dev.sqlite')
+    SQLALCHEMY_ECHO = True  # Enable SQL query logging for development
+
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///:memory:'
+    SQLALCHEMY_ECHO = True  # Enable SQL query logging for testing
+
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')

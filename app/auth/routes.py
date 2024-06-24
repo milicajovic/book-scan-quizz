@@ -25,10 +25,9 @@ def authorized():
     try:
         token = oauth.google.authorize_access_token()
         user_info = token.get('userinfo')
-        # print(f"user_info: {user_info}")
+
         if user_info:
-            user = User(
-                id=user_info['sub'],
+            user = User.get_or_create(
                 email=user_info['email'],
                 first_name=user_info.get('given_name'),
                 last_name=user_info.get('family_name'),

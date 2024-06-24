@@ -5,10 +5,11 @@ from app import create_app, db
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
-@app.cli.command("init-db")
-def init_db():
-    db.create_all()
-    print("Database tables created.")
+#
+# @app.cli.command("init-db")
+# def init_db():
+#     db.create_all()
+#     print("Database tables created.")
 
 if __name__ == '__main__':
     with app.app_context():
