@@ -2,6 +2,7 @@ from authlib.integrations.flask_client import OAuth
 
 oauth = OAuth()
 
+
 def init_oauth(app):
     oauth.init_app(app)
     oauth.register(
@@ -13,6 +14,5 @@ def init_oauth(app):
         client_kwargs={'scope': 'openid email profile'}
     )
 
-def transcribe_audio(audio_file):
-    # Your transcription logic here
-    return "dummy result for now"
+
+
