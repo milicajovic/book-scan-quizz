@@ -16,6 +16,10 @@
                        href="{{ url_for('main.about') }}">About</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'quiz.index' %}active{% endif %}"
+                       href="{{ url_for('quiz.index') }}">Quiz</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if active_page == 'services' %}active{% endif %}"
                        href="{{ url_for('answer.index') }}">Answer</a>
                 </li>

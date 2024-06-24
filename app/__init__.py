@@ -47,6 +47,9 @@ def create_app(config_name=None):
     from .answer import answer as quiz_blueprint
     app.register_blueprint(quiz_blueprint, url_prefix='/answer')
 
+    from .quiz import quiz as quiz_blueprint
+    app.register_blueprint(quiz_blueprint, url_prefix='/quiz')
+
     # Import and register the init-db command
     from .cli import init_db_command
     app.cli.add_command(init_db_command)
