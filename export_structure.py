@@ -3,7 +3,7 @@ import json
 
 
 def should_exclude(path):
-    exclude_dirs = {'.venv', 'venv', '__pycache__', 'node_modules', '.git', 'audio_uploads'}
+    exclude_dirs = {'.venv', 'venv', '__pycache__', 'node_modules', '.git', 'audio_uploads' , '.idea'}
     exclude_extensions = {'.pyc', '.pyo', '.pyd', '.db', '.sqlite3', 'wav', 'pdf', 'png', 'jpg', 'jpeg', 'json'}
 
     parts = path.split(os.sep)
