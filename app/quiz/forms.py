@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, MultipleFileField, IntegerField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms import StringField, SubmitField, MultipleFileField, SelectField
+from wtforms.validators import DataRequired
 from flask_wtf.file import FileAllowed, FileRequired
 
 class CreateQuizForm(FlaskForm):
@@ -21,5 +21,9 @@ class EditQuizForm(FlaskForm):
 class QuestionForm(FlaskForm):
     question_text = StringField('Question', validators=[DataRequired()])
     answer = StringField('Answer', validators=[DataRequired()])
-    difficulty_level = IntegerField('Difficulty Level', validators=[NumberRange(min=1, max=10)])
+    difficulty_level = SelectField('Difficulty Level',
+                                   choices=[('easy', 'Easy'),
+                                            ('medium', 'Medium'),
+                                            ('hard', 'Hard')],
+                                   validators=[DataRequired()])
     submit = SubmitField('Save Question')

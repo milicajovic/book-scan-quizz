@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Edit Question for Quiz: {{ quiz.title }}</h1>
-    <form method="POST">
+    <form method="POST" class="mt-4">
         {{ form.hidden_tag() }}
-        <div>
-            {{ form.question_text.label }}
-            {{ form.question_text() }}
+        <div class="mb-3">
+            {{ form.question_text.label(class="form-label") }}
+            {{ form.question_text(class="form-control") }}
         </div>
-        <div>
-            {{ form.answer.label }}
-            {{ form.answer() }}
+        <div class="mb-3">
+            {{ form.answer.label(class="form-label") }}
+            {{ form.answer(class="form-control") }}
         </div>
-        <div>
-            {{ form.difficulty_level.label }}
-            {{ form.difficulty_level() }}
+        <div class="mb-3">
+            {{ form.difficulty_level.label(class="form-label") }}
+            {{ form.difficulty_level(class="form-select") }}
         </div>
-        {{ form.submit() }}
+        {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}
