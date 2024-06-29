@@ -1,51 +1,41 @@
 import os
 
+def create_directory(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"Created directory: {path}")
 
-def create_directory_structure():
-    base_dir = '.'
+def create_file(path):
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write("# This file is intentionally left empty")
+        print(f"Created file: {path}")
 
-    # Create main directory structure
-    directories = [
-        '',
-        'app',
-        'app/main',
-        'app/auth',
-        'app/quiz',
-        'app/models',
-        'app/static',
-        'app/templates',
-        'tests'
-    ]
+def generate_structure():
+    # Define the base directories
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    google_ai_dir = os.path.join(base_dir, 'google_ai')
+    tests_dir = os.path.join(base_dir, 'tests')
+    tests_google_ai_dir = os.path.join(tests_dir, 'google_ai')
 
-    for directory in directories:
-        os.makedirs(os.path.join(base_dir, directory), exist_ok=True)
+    # Create directories
+    create_directory(google_ai_dir)
+    create_directory(tests_dir)
+    create_directory(tests_google_ai_dir)
 
-    # Create files
-    files = [
-        'app/__init__.py',
-        'app/main/__init__.py',
-        'app/main/routes.py',
-        'app/main/errors.py',
-        'app/auth/__init__.py',
-        'app/auth/routes.py',
-        'app/quiz/__init__.py',
-        'app/quiz/routes.py',
-        'app/models/__init__.py',
-        'app/utils.py',
-        'tests/__init__.py',
-        'tests/test_main.py',
-        'tests/test_auth.py',
-        'tests/test_quiz.py',
-        'config.py',
-        'run.py',
-        'requirements.txt'
-    ]
+    # Create files in google_ai directory
+    create_file(os.path.join(google_ai_dir, '__init__.py'))
+    create_file(os.path.join(google_ai_dir, 'transcription.py'))
+    create_file(os.path.join(google_ai_dir, 'question_generator.py'))
+    create_file(os.path.join(google_ai_dir, 'file_utils.py'))
 
-    for file in files:
-        open(os.path.join(base_dir, file), 'a').close()
+    # Create files in tests/google_ai directory
+    create_file(os.path.join(tests_google_ai_dir, '__init__.py'))
+    create_file(os.path.join(tests_google_ai_dir, 'test_transcription.py'))
+    create_file(os.path.join(tests_google_ai_dir, 'test_question_generator.py'))
+    create_file(os.path.join(tests_google_ai_dir, 'test_file_utils.py'))
 
-    print("Directory structure created successfully!")
-
+    print("File structure generated successfully!")
 
 if __name__ == "__main__":
-    create_directory_structure()
+    generate_structure()
