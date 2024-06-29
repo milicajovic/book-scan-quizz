@@ -14,8 +14,15 @@
         <div id="imagePreview" class="mb-3">
             <!-- Uploaded images will be displayed here -->
         </div>
-        <button type="submit" class="btn btn-primary">{% if quiz %}Update{% else %}Create{% endif %} Quiz</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">{% if quiz %}Update{% else %}Create{% endif %} Quiz</button>
     </form>
+
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" class="spinner-overlay d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
 
     {% if questions %}
         <h2>Questions</h2>
@@ -34,6 +41,23 @@
     {% endif %}
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .spinner-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function deleteQuestion(quizId, questionId) {
@@ -49,5 +73,36 @@ function deleteQuestion(quizId, questionId) {
         });
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('quizForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        loadingSpinner.classList.remove('d-none');
+
+        // Submit the form
+        fetch(form.action, {
+            method: form.method,
+            body: new FormData(form)
+        }).then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('Network response was not ok.');
+        }).then(html => {
+            document.body.innerHTML = html;
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while submitting the form. Please try again.');
+        }).finally(() => {
+            submitBtn.disabled = false;
+            loadingSpinner.classList.add('d-none');
+        });
+    });
+});
 </script>
 {% endblock %}
