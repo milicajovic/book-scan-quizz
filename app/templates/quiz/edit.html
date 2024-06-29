@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>{% if quiz %}Edit{% else %}Create{% endif %} Quiz</h1>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="quizForm">
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.title.label(class="form-label") }}
@@ -14,55 +14,40 @@
         <div id="imagePreview" class="mb-3">
             <!-- Uploaded images will be displayed here -->
         </div>
-        {% if questions %}
-            <h2>Questions</h2>
-            {% for question in questions %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Question {{ loop.index }}</h5>
-                        <p class="card-text">{{ question.question_text }}</p>
-                        <p class="card-text"><strong>Answer:</strong> {{ question.answer }}</p>
-                        <p class="card-text"><strong>Difficulty:</strong> {{ question.difficulty_level }}</p>
-                        <a href="{{ url_for('quiz.edit_question', quiz_id=quiz.id, question_id=question.id) }}" class="btn btn-secondary">Edit</a>
-                        <form action="{{ url_for('quiz.delete_question', quiz_id=quiz.id, question_id=question.id) }}" method="POST" style="display: inline;">
-                            <input type="submit" value="Delete" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this question?');">
-                        </form>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
         <button type="submit" class="btn btn-primary">{% if quiz %}Update{% else %}Create{% endif %} Quiz</button>
     </form>
+
+    {% if questions %}
+        <h2>Questions</h2>
+        {% for question in questions %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Question {{ loop.index }}</h5>
+                    <p class="card-text">{{ question.question_text }}</p>
+                    <p class="card-text"><strong>Answer:</strong> {{ question.answer }}</p>
+                    <p class="card-text"><strong>Difficulty:</strong> {{ question.difficulty_level }}</p>
+                    <a href="{{ url_for('quiz.edit_question', quiz_id=quiz.id, question_id=question.id) }}" class="btn btn-secondary">Edit</a>
+                    <button onclick="deleteQuestion('{{ quiz.id }}', '{{ question.id }}')" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const imageInput = document.getElementById('images');
-    const imagePreview = document.getElementById('imagePreview');
-
-    imageInput.addEventListener('change', function() {
-        imagePreview.innerHTML = '';
-        for (let i = 0; i < this.files.length; i++) {
-            const file = this.files[i];
-            if (file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.classList.add('img-thumbnail', 'm-1');
-                img.style.maxWidth = '100px';
-                img.style.maxHeight = '100px';
-                img.file = file;
-                imagePreview.appendChild(img);
-
-                const reader = new FileReader();
-                reader.onload = (function(aImg) {
-                    return function(e) {
-                        aImg.src = e.target.result;
-                    };
-                })(img);
-                reader.readAsDataURL(file);
+function deleteQuestion(quizId, questionId) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        fetch(`/quiz/${quizId}/delete_question/${questionId}`, {
+            method: 'POST',
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to delete question');
             }
-        }
-    });
-});
+        });
+    }
+}
 </script>
 {% endblock %}

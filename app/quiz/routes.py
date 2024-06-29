@@ -7,7 +7,7 @@ from .forms import CreateQuizForm, EditQuizForm, QuestionForm
 from .. import db
 from ..models import Quiz, Question, PageScan
 from google_ai import generate_questions  # Updated import statement
-
+from flask import jsonify
 
 
 @quiz.route('/')
@@ -104,6 +104,8 @@ def edit(quiz_id):
     return render_template('quiz/edit.html', form=form, quiz=quiz, questions=questions)
 
 
+
+
 @quiz.route('/<quiz_id>/delete_question/<question_id>', methods=['POST'])
 @login_required
 def delete_question(quiz_id, question_id):
@@ -117,10 +119,8 @@ def delete_question(quiz_id, question_id):
 
     db.session.delete(question)
     db.session.commit()
-    flash('Question deleted successfully!', 'success')
-    return redirect(url_for('quiz.edit', quiz_id=quiz_id))
 
-# Keep other routes (answer, add_question, edit_question) as they are
+    return jsonify({'success': True, 'message': 'Question deleted successfully!'})
 
 @quiz.route('/<quiz_id>/answer', methods=['GET', 'POST'])
 @login_required
