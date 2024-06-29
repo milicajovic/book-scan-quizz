@@ -31,7 +31,7 @@ def generate_questions(image_paths: List[str], model_name: str = DEFAULT_PRO_MOD
 
     result = None
     for image_path in image_paths:
-        response = execute_genai_operation(prompt, file_path=image_path, mime_type="image/jpeg", model_name=model_name)
+        response = execute_genai_operation(prompt, file_paths=image_path, mime_type="image/jpeg", model_name=model_name)
         if response:
             try:
                 parsed_response = json.loads(response)

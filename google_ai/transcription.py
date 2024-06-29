@@ -17,4 +17,4 @@ def transcribe_audio(audio_path: str, mime_type: str = "audio/wav", model_name: 
     Optional[str]: The transcribed text, or None if transcription failed.
     """
     prompt = "Transcribe the audio file and provide a summary."
-    return execute_genai_operation(prompt, file_path=audio_path, mime_type=mime_type, model_name=model_name)
+    return execute_genai_operation(prompt, file_paths=audio_path, mime_type=mime_type, model_name=model_name)

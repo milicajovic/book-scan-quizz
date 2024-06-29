@@ -1,5 +1,4 @@
-from typing import Optional
-
+from typing import Optional, Union, List
 import google.generativeai as genai
 from flask import current_app
 
@@ -8,7 +7,7 @@ from .config import GENERATION_CONFIG, SAFETY_SETTINGS, DEFAULT_MODEL
 
 def execute_genai_operation(
         prompt: str,
-        file_path: Optional[str] = None,
+        file_paths: Optional[Union[str, List[str]]] = None,
         mime_type: Optional[str] = None,
         model_name: str = DEFAULT_MODEL
 ) -> Optional[str]:
@@ -17,8 +16,8 @@ def execute_genai_operation(
 
     Args:
     prompt (str): The prompt to send to the AI model.
-    file_path (Optional[str]): Path to the file to be processed, if any.
-    mime_type (Optional[str]): MIME type of the file, if a file is provided.
+    file_paths (Optional[Union[str, List[str]]]): Path(s) to the file(s) to be processed.
+    mime_type (Optional[str]): MIME type of the file(s). If multiple files, all must be the same type.
     model_name (str): Name of the Gemini model to use.
 
     Returns:
@@ -34,9 +33,14 @@ def execute_genai_operation(
         )
 
         parts = []
-        if file_path:
-            file = genai.upload_file(file_path, mime_type=mime_type)
-            parts.append(file)
+        if file_paths:
+            if isinstance(file_paths, str):
+                file_paths = [file_paths]  # Convert single path to list
+
+            for file_path in file_paths:
+                file = genai.upload_file(file_path, mime_type=mime_type)
+                parts.append(file)
+
         parts.append(prompt)
 
         chat_session = model.start_chat(history=[{"role": "user", "parts": parts}])

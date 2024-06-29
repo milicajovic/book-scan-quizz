@@ -37,9 +37,10 @@ def explore_directory(directory):
 
 
 def export_project_structure(root_dir='.'):
-    
-    if(os.path.exists('project_structure.json')):
+
+    if os.path.exists('project_structure.json'):
         os.remove('project_structure.json')
+
     project_structure = explore_directory(root_dir)
     output = {
         'project_structure': project_structure
