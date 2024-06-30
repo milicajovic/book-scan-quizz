@@ -20,8 +20,8 @@
                        href="{{ url_for('quiz.index') }}">Quiz</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'services' %}active{% endif %}"
-                       href="{{ url_for('answer.index') }}">Answer</a>
+                    <a class="nav-link {% if active_page == 'quiz_session.start' %}active{% endif %}"
+                       href="{{ url_for('quiz_session.start', quiz_id='latest') }}">Answer Quiz</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if active_page == 'contact' %}active{% endif %}"

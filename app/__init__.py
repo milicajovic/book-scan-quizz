@@ -59,14 +59,14 @@ def create_app(config_name=None):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-    from .answer import answer as quiz_blueprint
-    app.register_blueprint(quiz_blueprint, url_prefix='/answer')
+
 
     from .quiz import quiz as quiz_blueprint
     app.register_blueprint(quiz_blueprint, url_prefix='/quiz')
 
-    from .prep_session import prep_session as prep_session_blueprint
-    app.register_blueprint(prep_session_blueprint, url_prefix='/prep-session')
+    # Register the new quiz_session blueprint
+    from .quiz_session import quiz_session as quiz_session_blueprint
+    app.register_blueprint(quiz_session_blueprint, url_prefix='/quiz-session')
 
     # Import and register the init-db command
     from .cli import init_db_command
