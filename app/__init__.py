@@ -4,13 +4,27 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-
+from sqlalchemy import MetaData
+from flask_migrate import Migrate
 from config import config
 from .utils import init_oauth, oauth
 
-db = SQLAlchemy()
-login_manager = LoginManager()
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
 
+# Create metadata with naming convention
+metadata = MetaData(naming_convention=convention)
+
+# Create db with the metadata
+db = SQLAlchemy(metadata=metadata)
+migrate = Migrate()
+
+login_manager = LoginManager()
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -22,6 +36,7 @@ def create_app(config_name=None):
     config[config_name].init_app(app)
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     if app.config['SQLALCHEMY_ECHO']:
         # Set up SQLAlchemy query logging

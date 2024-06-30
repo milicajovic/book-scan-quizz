@@ -36,17 +36,35 @@ class Question(db.Model):
 class Answer(db.Model):
     __tablename__ = 'answer'
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey('user.id'))
-    answer_text = Column(String(1000))
-    audio_file_name = Column(String(255))
-    date = Column(DateTime, default=func.now())
-    feedback = Column(String(1000))
-    correctness = Column(db.Float)
-    completeness = Column(db.Float)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
+    question_id = db.Column(db.String(36), db.ForeignKey('question.id'))
+    prep_session_id = db.Column(db.String(36), db.ForeignKey('prep_session.id'))  # New field
+    answer_text = db.Column(db.String(1000))
+    audio_file_name = db.Column(db.String(255))
+    date = db.Column(db.DateTime, default=db.func.now())
+    feedback = db.Column(db.String(1000))
+    correctness = db.Column(db.Float)
+    completeness = db.Column(db.Float)
 
-    user = relationship("User", back_populates="answers")
+    user = db.relationship("User", back_populates="answers")
+    question = db.relationship("Question", back_populates="answers")
+    prep_session = db.relationship("PrepSession", back_populates="answers")  # New relationship
 
+class PrepSession(db.Model):
+    __tablename__ = 'prep_session'
+
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'))
+    quiz_id = db.Column(db.String(36), db.ForeignKey('quiz.id'))
+    start_time = db.Column(db.DateTime, default=db.func.now())
+    end_time = db.Column(db.DateTime)
+    status = db.Column(db.String(20))  # 'in_progress', 'completed', 'abandoned'
+    score = db.Column(db.Float)
+
+    user = db.relationship("User", back_populates="prep_sessions")
+    quiz = db.relationship("Quiz", back_populates="prep_sessions")
+    answers = db.relationship("Answer", back_populates="prep_session")
 
 class PageScan(db.Model):
     __tablename__ = 'page_scan'

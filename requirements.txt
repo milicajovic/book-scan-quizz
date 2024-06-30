@@ -9,6 +9,7 @@ google-generativeai
 # psycopg2
 # mysqlclient
 flask-login
+Flask-Migrate
 Werkzeug~=3.0.3
 click~=8.1.7
 SQLAlchemy~=2.0.31
