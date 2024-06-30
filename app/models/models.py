@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, DateTime, ForeignKey, func, Integer
 from sqlalchemy.orm import relationship
 
 from .. import db
@@ -17,6 +17,7 @@ class Quiz(db.Model):
     owner = relationship("User", back_populates="quizzes")
     questions = relationship("Question", back_populates="quiz")
     page_scans = relationship("PageScan", back_populates="quiz")
+    prep_sessions = relationship("PrepSession", back_populates="quiz")  # New relationship
 
 
 class Question(db.Model):
@@ -28,9 +29,11 @@ class Question(db.Model):
     question_text = Column(String(1000))
     answer = Column(String(1000))
     difficulty_level = Column(db.Integer)
+    position = Column(Integer)  # New column
 
     quiz = relationship("Quiz", back_populates="questions")
     page_scan = relationship("PageScan", back_populates="questions")
+    answers = relationship("Answer", back_populates="question")  # Add this line
 
 
 class Answer(db.Model):
@@ -65,6 +68,14 @@ class PrepSession(db.Model):
     user = db.relationship("User", back_populates="prep_sessions")
     quiz = db.relationship("Quiz", back_populates="prep_sessions")
     answers = db.relationship("Answer", back_populates="prep_session")
+
+    def get_current_question(self):
+        answered_question_ids = [answer.question_id for answer in self.answers]
+        next_question = Question.query.filter(
+            Question.quiz_id == self.quiz_id,
+            ~Question.id.in_(answered_question_ids) # NOT in
+        ).order_by(Question.id).first()
+        return next_question
 
 class PageScan(db.Model):
     __tablename__ = 'page_scan'

@@ -3,6 +3,7 @@ import uuid
 
 from flask_login import UserMixin
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 
 from .. import db
 
@@ -16,8 +17,9 @@ class User(UserMixin, db.Model):
     last_name = Column(String(255))
     picture = Column(String(255))
 
-    quizzes = db.relationship("Quiz", back_populates="owner")
-    answers = db.relationship("Answer", back_populates="user")
+    quizzes = relationship("Quiz", back_populates="owner")
+    answers = relationship("Answer", back_populates="user")
+    prep_sessions = relationship("PrepSession", back_populates="user")  # New relationship
 
     def __init__(self, email, first_name=None, last_name=None, picture=None):
         self.email = email

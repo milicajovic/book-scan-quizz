@@ -122,19 +122,19 @@ def delete_question(quiz_id, question_id):
 
     return jsonify({'success': True, 'message': 'Question deleted successfully!'})
 
-@quiz.route('/<quiz_id>/answer', methods=['GET', 'POST'])
-@login_required
-def answer(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
-
-    if request.method == 'POST':
-        # Process answers here
-        # This is a placeholder for answer processing logic
-        flash('Answers submitted successfully!', 'success')
-        return redirect(url_for('quiz.index'))
-
-    return render_template('quiz/answer.html', quiz=quiz, questions=questions)
+# @quiz.route('/<quiz_id>/answer', methods=['GET', 'POST'])
+# @login_required
+# def answer(quiz_id):
+#     quiz = Quiz.query.get_or_404(quiz_id)
+#     questions = Question.query.filter_by(quiz_id=quiz_id).all()
+#
+#     if request.method == 'POST':
+#         # Process answers here
+#         # This is a placeholder for answer processing logic
+#         flash('Answers submitted successfully!', 'success')
+#         return redirect(url_for('quiz.index'))
+#
+#     return render_template('quiz/answer.html', quiz=quiz, questions=questions)
 
 
 # Add this new route to your existing routes.py file
