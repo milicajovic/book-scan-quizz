@@ -7,7 +7,7 @@ let analyser;
 let dataArray;
 let animationId;
 
-function initAudioRecording(submitUrl) {
+function initAudioRecording(submitUrl, questionId, sessionId) {
     const recordButton = document.getElementById('recordButton');
     const recordingFeedback = document.getElementById('recordingFeedback');
     const recordingDuration = document.getElementById('recordingDuration');
@@ -20,77 +20,56 @@ function initAudioRecording(submitUrl) {
     recordButton.addEventListener('mouseup', stopRecording);
     recordButton.addEventListener('mouseleave', stopRecording);
 
-    function disableButton() {
-        recordButton.disabled = true;
-        recordButton.classList.remove('btn-success', 'btn-danger');
-        recordButton.classList.add('btn-secondary');
-        recordButton.style.cursor = 'not-allowed';
-    }
-
-    function enableButton() {
-        recordButton.disabled = false;
-        recordButton.classList.remove('btn-secondary');
-        recordButton.classList.add('btn-success');
-        recordButton.style.cursor = 'pointer';
-    }
-
     function startRecording() {
-        if (recordButton.disabled) return;
-
-        audioChunks = [];
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
+                audioChunks = [];
                 startTime = Date.now();
 
-                mediaRecorder.addEventListener("dataavailable", event => {
+                mediaRecorder.ondataavailable = (event) => {
                     audioChunks.push(event.data);
-                });
+                };
 
-                recordButton.classList.remove('btn-success');
-                recordButton.classList.add('btn-danger');
-                recordingFeedback.style.display = 'block';
-                audioVisualization.style.display = 'block';
-                startDurationCounter();
-                startAudioVisualization(stream);
+                mediaRecorder.start();
+                updateUI(true);
+                startVisualization(stream);
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
-                alert('Unable to access the microphone. Please ensure it is connected and you have granted permission to use it.');
+                alert('Error accessing microphone. Please ensure you have given permission to use the microphone.');
             });
     }
 
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
-            recordButton.classList.remove('btn-danger');
-            recordButton.classList.add('btn-success');
-            recordingFeedback.style.display = 'none';
-            audioVisualization.style.display = 'none';
-            stopDurationCounter();
-            stopAudioVisualization();
-
-            mediaRecorder.addEventListener("stop", () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                sendAudioToServer(audioBlob);
-            });
+            updateUI(false);
+            stopVisualization();
+            sendAudioToServer(new Blob(audioChunks, { type: 'audio/wav' }));
         }
     }
 
-    function startDurationCounter() {
-        recordingDuration.textContent = '0';
-        durationInterval = setInterval(() => {
-            const duration = Math.floor((Date.now() - startTime) / 1000);
-            recordingDuration.textContent = duration;
-        }, 1000);
+    function updateUI(isRecording) {
+        recordButton.classList.toggle('btn-danger', isRecording);
+        recordButton.classList.toggle('btn-success', !isRecording);
+        recordButton.textContent = isRecording ? 'Recording...' : 'Record';
+        recordingFeedback.style.display = isRecording ? 'block' : 'none';
+
+        if (isRecording) {
+            durationInterval = setInterval(updateDuration, 1000);
+        } else {
+            clearInterval(durationInterval);
+            recordingDuration.textContent = '0';
+        }
     }
 
-    function stopDurationCounter() {
-        clearInterval(durationInterval);
+    function updateDuration() {
+        const duration = Math.floor((Date.now() - startTime) / 1000);
+        recordingDuration.textContent = duration;
     }
 
-    function startAudioVisualization(stream) {
+    function startVisualization(stream) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
         const source = audioContext.createMediaStreamSource(stream);
@@ -99,61 +78,101 @@ function initAudioRecording(submitUrl) {
         const bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
 
-        function updateAudioMeter() {
+        function updateVisualization() {
+            animationId = requestAnimationFrame(updateVisualization);
             analyser.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-            const volume = Math.min(100, Math.max(0, average * 2));
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            const volume = Math.min(100, Math.max(0, average * 100 / 256));
             audioMeter.style.width = `${volume}%`;
-            animationId = requestAnimationFrame(updateAudioMeter);
         }
 
-        updateAudioMeter();
+        audioVisualization.style.display = 'block';
+        updateVisualization();
     }
 
-    function stopAudioVisualization() {
-        if (audioContext) {
-            audioContext.close();
-        }
+    function stopVisualization() {
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
+        if (audioContext) {
+            audioContext.close();
+        }
+        audioVisualization.style.display = 'none';
     }
 
     function sendAudioToServer(audioBlob) {
-        const formData = new FormData();
-        formData.append("audio", audioBlob, "recording.wav");
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.wav");
+    formData.append("question_id", questionId);
+    formData.append("session_id", sessionId);
 
-        resultText.textContent = '';
-        processingFeedback.style.display = 'block';
-        disableButton();
+    resultText.textContent = '';
+    processingFeedback.style.display = 'block';
+    disableButton();
 
-        fetch(submitUrl, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    fetch(submitUrl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text();
+    })
+    .then(data => {
+        processingFeedback.style.display = 'none';
+
+        // Split the response into evaluation and JSON parts
+        const [evaluationText, jsonDataString] = data.split('####');
+
+        // Display evaluation text
+        resultText.innerHTML = evaluationText.trim().replace(/\n/g, '<br>');
+        resultText.style.color = 'initial';
+
+        // Parse and handle JSON data
+        const jsonLines = jsonDataString.trim().split('\n');
+        const correctnessLine = jsonLines.find(line => line.startsWith('Correctness:'));
+        const completenessLine = jsonLines.find(line => line.startsWith('Completeness:'));
+        const jsonData = jsonLines[jsonLines.length - 1];
+
+        if (correctnessLine && completenessLine) {
+            const correctness = correctnessLine.split(':')[1].trim();
+            const completeness = completenessLine.split(':')[1].trim();
+            resultText.innerHTML += `<br><br>Correctness: ${correctness}/10<br>Completeness: ${completeness}/10`;
+        }
+
+        try {
+            const responseData = JSON.parse(jsonData);
+
+            if (responseData.session_completed) {
+                // Redirect to session completion page
+                window.location.href = '/quiz-session/complete/' + sessionId;
+            } else if (responseData.next_question) {
+                // Prepare for next question
+                setTimeout(() => {
+                    window.location.href = '/quiz-session/answer/' + sessionId;
+                }, 5000);  // Wait 5 seconds before loading next question
             }
-            return response.json();
-        })
-        .then(data => {
-            processingFeedback.style.display = 'none';
-            if (data.error) {
-                resultText.textContent = data.error;
-                resultText.style.color = 'red';
-            } else {
-                resultText.textContent = data.transcription || data.result;
-                resultText.style.color = 'initial';
-            }
-            enableButton();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            processingFeedback.style.display = 'none';
-            resultText.textContent = 'An error occurred while processing the audio. Please try again.';
-            resultText.style.color = 'red';
-            enableButton();
-        });
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+        }
+
+        enableButton();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        processingFeedback.style.display = 'none';
+        resultText.textContent = 'An error occurred while processing the audio. Please try again.';
+        resultText.style.color = 'red';
+        enableButton();
+    });
+}
+    function disableButton() {
+        recordButton.disabled = true;
+    }
+
+    function enableButton() {
+        recordButton.disabled = false;
     }
 }
