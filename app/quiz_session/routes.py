@@ -30,6 +30,7 @@ def start(quiz_id):
     db.session.commit()
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
+
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
@@ -45,6 +46,7 @@ def answer_question(session_id):
 
     return render_template('quiz_session/answer_question.html', question=current_question, session_id=session_id)
 
+
 @quiz_session.route('/complete/<session_id>')
 @login_required
 def complete(session_id):
@@ -58,23 +60,7 @@ def complete(session_id):
     return render_template('quiz_session/complete.html', session=prep_session)
 
 
-def generate_evaluation(question, prep_session, audio_path, filename):
-    evaluation_result = ''
-    try:
-        for chunk in evaluate_audio_answer(question.question_text, question.answer, audio_path):
-            evaluation_result += chunk
-            yield chunk
 
-        correctness, completeness = process_evaluation_result(evaluation_result)
-
-        store_answer(current_user.id, question.id, prep_session.id, audio_path, filename,
-                     evaluation_result, correctness, completeness)
-
-        response_data = prepare_response_data(prep_session)
-        yield '\n' + json.dumps(response_data)
-
-    finally:
-        os.remove(audio_path)
 
 def save_audio_file(audio_file):
     filename = secure_filename(audio_file.filename)
@@ -82,14 +68,8 @@ def save_audio_file(audio_file):
     audio_file.save(audio_path)
     return audio_path, filename
 
-def process_evaluation_result(evaluation_result):
-    parts = evaluation_result.split('####')
-    correctness = completeness = 0
-    if len(parts) > 1:
-        scores = parts[1].strip().split('\n')
-        correctness = float(scores[0].split(':')[1].strip())
-        completeness = float(scores[1].split(':')[1].strip())
-    return correctness, completeness
+
+
 
 def store_answer(user_id, question_id, session_id, audio_path, filename, evaluation_result, correctness, completeness):
     answer = Answer(
@@ -105,24 +85,24 @@ def store_answer(user_id, question_id, session_id, audio_path, filename, evaluat
     db.session.add(answer)
     db.session.commit()
 
-def prepare_response_data(prep_session):
-    next_question = prep_session.get_current_question()
-    return {
-        'next_question': next_question.id if next_question else None,
-        'session_completed': next_question is None
-    }
+
+
 
 
 def process_audio_response(audio_file, question, prep_session):
     audio_path, filename = save_audio_file(audio_file)
     evaluation_result = evaluate_audio_answer(question.question_text, question.answer, audio_path)
-    transcription = transcribe_audio(audio_path)
+    # Ensure evaluation_result is a string
+    if hasattr(evaluation_result, '__iter__') and not isinstance(evaluation_result, str):
+        evaluation_result = ''.join(evaluation_result)
+
+    #transcription = transcribe_audio(audio_path)
 
     answer = Answer(
         user_id=current_user.id,
         question_id=question.id,
         prep_session_id=prep_session.id,
-        answer_text=transcription,
+        answer_text="not-used-at-the-moment",
         audio_file_name=filename,
         feedback=evaluation_result
     )
@@ -161,6 +141,7 @@ def evaluate_audio():
             return jsonify({'error': 'Question or session not found'}), 404
 
         evaluation_result = process_audio_response(audio_file, question, prep_session)
+
         next_action = get_next_action(prep_session)
 
         return jsonify({
