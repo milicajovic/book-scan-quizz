@@ -3,14 +3,18 @@ import json
 
 
 def should_exclude(path):
-    exclude_dirs = {'.venv', 'venv', '__pycache__', 'node_modules', '.git', 'audio_uploads' , '.idea'}
-    exclude_extensions = {'.pyc', '.pyo', '.pyd', '.db', '.sqlite3', 'wav', 'pdf', 'png', 'jpg', 'jpeg', 'json'}
+    exclude_dirs = {'.venv', 'venv', '__pycache__', 'node_modules', '.git',
+                    'audio_uploads', '.idea', '.DS_Store'}
+    exclude_extensions = {'.pyc', '.pyo', '.pyd', '.db', '.sqlite3', '.wav', '.pdf',
+                          '.png', '.jpg', '.jpeg', '.json', '.DS_Store'}
 
     parts = path.split(os.sep)
+    #print(parts)
     if any(part in exclude_dirs for part in parts):
         return True
 
     _, ext = os.path.splitext(path)
+    #print(ext)
     return ext.lower() in exclude_extensions
 
 
@@ -37,7 +41,6 @@ def explore_directory(directory):
 
 
 def export_project_structure(root_dir='.'):
-
     if os.path.exists('project_structure.json'):
         os.remove('project_structure.json')
 

@@ -22,28 +22,19 @@ Completeness:5
 """
 
 
+import logging
+import traceback
+
+import logging
+import traceback
+from google.api_core import exceptions
+
 def evaluate_audio_answer(
         question: str,
         correct_answer: str,
         audio_path: str,
         model_name: str = DEFAULT_MODEL
 ) -> Generator[str, None, None]:
-    """
-    Evaluate an audio answer using Google's Generative AI.
-
-    Args:
-    question (str): The question being answered.
-    correct_answer (str): The correct answer to the question.
-    audio_path (str): Path to the audio file containing the student's answer.
-    model_name (str): Name of the AI model to use. Defaults to DEFAULT_MODEL.
-
-    Yields:
-    str: Chunks of the evaluation text.
-
-    Raises:
-    FileNotFoundError: If the audio file is not found.
-    exceptions.GoogleAPICallError: If there's an error in the API call.
-    """
     try:
         genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
         model = genai.GenerativeModel(
@@ -67,13 +58,8 @@ def evaluate_audio_answer(
             if chunk.text:
                 yield chunk.text
 
-    except FileNotFoundError:
-        yield "Error: Audio file not found."
-    except exceptions.GoogleAPICallError as e:
-        yield f"Error in API call: {str(e)}"
     except Exception as e:
-        yield f"An unexpected error occurred: {str(e)}"
-
-
-
-
+        error_msg = f"Error in evaluate_audio_answer: {str(e)}"
+        logging.error(error_msg)
+        logging.error(f"Call Stack:\n{traceback.format_exc()}")
+        raise  # Re-raise the original exception

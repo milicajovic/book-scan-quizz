@@ -5,7 +5,19 @@
 {% block content %}
 <div class="container">
     <h1 class="mb-4">Question</h1>
-    <p class="lead mb-4">{{ question.question_text }}</p>
+    <p id="question-text" class="lead mb-4">{{ question.question_text }}</p>
+
+    <!-- TTS controls -->
+    <div id="tts-controls" class="mb-4">
+        <label for="voice-select" class="form-label">Select Voice:</label>
+        <select id="voice-select" class="form-select">
+            <!-- Voice options will be populated by JavaScript -->
+        </select>
+    </div>
+
+    <!-- Text display area for spoken text -->
+    <div id="spoken-text-display" class="alert alert-info mt-3" style="display: none;"></div>
+
     <p class="mb-4">Press and hold the button to record your answer.</p>
 
     <div class="text-center my-4">
@@ -37,9 +49,11 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
+<script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
+    // TTS is initialized in text_to_speech.js
 });
 </script>
 {% endblock %}

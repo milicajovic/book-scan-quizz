@@ -3,7 +3,7 @@ import os
 
 from flask import render_template, redirect, url_for, request, jsonify, current_app, Response, stream_with_context
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, escape
 
 from google_ai import transcribe_audio
 from google_ai.audio_answer_evaluator import evaluate_audio_answer
@@ -132,14 +132,17 @@ def evaluate_audio():
         session_id = request.form.get('session_id')
 
         if not audio_file or not question_id or not session_id:
+            current_app.logger.warning("Missing required data in evaluate_audio")
             return jsonify({'error': 'Missing required data'}), 400
 
         question = Question.query.get(question_id)
         prep_session = PrepSession.query.get(session_id)
 
         if not question or not prep_session:
+            current_app.logger.warning(f"Question or session not found: question_id={question_id}, session_id={session_id}")
             return jsonify({'error': 'Question or session not found'}), 404
 
+        current_app.logger.info(f"Processing audio response for question_id={question_id}, session_id={session_id}")
         evaluation_result = process_audio_response(audio_file, question, prep_session)
 
         next_action = get_next_action(prep_session)
@@ -151,5 +154,10 @@ def evaluate_audio():
         })
 
     except Exception as e:
-        current_app.logger.error(f"Error in evaluate_audio: {str(e)}")
-        return jsonify({'error': f'An error occurred while processing the audio: {str(e)}'}), 500
+        current_app.logger.exception(f"Error in evaluate_audio: {str(e)}")
+        error_message = escape(str(e))  # Escape the error message
+        return jsonify({
+            'status': 'error',
+            'message': f'An unexpected error occurred: {error_message}',
+            'next_question': True  # Ensure the client can move to the next question even if there's an error
+        }), 500

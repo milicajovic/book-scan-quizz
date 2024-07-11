@@ -21,7 +21,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     recordButton.addEventListener('mouseleave', stopRecording);
 
     function startRecording() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
+        navigator.mediaDevices.getUserMedia({audio: true})
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
@@ -46,7 +46,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             mediaRecorder.stop();
             updateUI(false);
             stopVisualization();
-            sendAudioToServer(new Blob(audioChunks, { type: 'audio/wav' }));
+            sendAudioToServer(new Blob(audioChunks, {type: 'audio/wav'}));
         }
     }
 
@@ -100,7 +100,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         audioVisualization.style.display = 'none';
     }
 
-    function sendAudioToServer(audioBlob) {
+   function sendAudioToServer(audioBlob) {
     const formData = new FormData();
     formData.append("audio", audioBlob, "recording.wav");
     formData.append("question_id", questionId);
@@ -114,48 +114,23 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.text();
-    })
+    .then(response => response.json())
     .then(data => {
         processingFeedback.style.display = 'none';
 
-        // Split the response into evaluation and JSON parts
-        const [evaluationText, jsonDataString] = data.split('####');
-
-        // Display evaluation text
-        resultText.innerHTML = evaluationText.trim().replace(/\n/g, '<br>');
-        resultText.style.color = 'initial';
-
-        // Parse and handle JSON data
-        const jsonLines = jsonDataString.trim().split('\n');
-        const correctnessLine = jsonLines.find(line => line.startsWith('Correctness:'));
-        const completenessLine = jsonLines.find(line => line.startsWith('Completeness:'));
-        const jsonData = jsonLines[jsonLines.length - 1];
-
-        if (correctnessLine && completenessLine) {
-            const correctness = correctnessLine.split(':')[1].trim();
-            const completeness = completenessLine.split(':')[1].trim();
-            resultText.innerHTML += `<br><br>Correctness: ${correctness}/10<br>Completeness: ${completeness}/10`;
+        if (data.status === 'error') {
+            throw new Error(data.message);
         }
 
-        try {
-            const responseData = JSON.parse(jsonData);
+        // Display evaluation text
+        resultText.innerHTML = data.message.trim().replace(/\n/g, '<br>');
+        resultText.style.color = 'initial';
 
-            if (responseData.session_completed) {
-                // Redirect to session completion page
-                window.location.href = '/quiz-session/complete/' + sessionId;
-            } else if (responseData.next_question) {
-                // Prepare for next question
-                setTimeout(() => {
-                    window.location.href = '/quiz-session/answer/' + sessionId;
-                }, 5000);  // Wait 5 seconds before loading next question
-            }
-        } catch (error) {
-            console.error('Error parsing JSON:', error);
+        if (data.next_question) {
+            // Prepare for next question
+            setTimeout(() => {
+                window.location.href = '/quiz-session/answer/' + sessionId;
+            }, 5000);  // Wait 5 seconds before loading next question
         }
 
         enableButton();
@@ -163,9 +138,28 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     .catch(error => {
         console.error('Error:', error);
         processingFeedback.style.display = 'none';
-        resultText.textContent = 'An error occurred while processing the audio. Please try again.';
+
+        // Handle both Error objects and error responses from the server
+        let errorMessage = error.message || 'Unknown error occurred22';
+
+        // If the error is from our server response, it will be in JSON format
+        if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
+            try {
+                const errorData = JSON.parse(errorMessage);
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error message:', e);
+            }
+        }
+
+        resultText.innerHTML = 'Error: ' + errorMessage;
         resultText.style.color = 'red';
         enableButton();
+
+        // Still allow moving to the next question after an error
+        setTimeout(() => {
+            window.location.href = '/quiz-session/answer/' + sessionId;
+        }, 100000);  // Wait 10 seconds before loading next question, giving more time to read the error
     });
 }
     function disableButton() {
