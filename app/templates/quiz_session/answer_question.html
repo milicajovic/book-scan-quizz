@@ -44,16 +44,24 @@
         <h3>Result:</h3>
         <p id="resultText"></p>
     </div>
+
+    <!-- New buttons for retry and next question -->
+    <div id="actionButtons" class="text-center mt-4" style="display: none;">
+        <button id="retryButton" class="btn btn-warning me-2">Retry</button>
+        <button id="nextQuestionButton" class="btn btn-primary">Next Question</button>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
 <script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
+<script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
-    // TTS is initialized in text_to_speech.js
-});
+    // Initialize audio recording and set up the next question URL
+    document.addEventListener('DOMContentLoaded', function() {
+        initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
+        window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
+    });
 </script>
 {% endblock %}

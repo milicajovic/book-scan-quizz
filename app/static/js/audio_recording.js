@@ -15,6 +15,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     const processingFeedback = document.getElementById('processingFeedback');
     const audioVisualization = document.getElementById('audioVisualization');
     const audioMeter = document.getElementById('audioMeter');
+    const actionButtons = document.getElementById('actionButtons');
 
     recordButton.addEventListener('mousedown', startRecording);
     recordButton.addEventListener('mouseup', stopRecording);
@@ -100,68 +101,66 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         audioVisualization.style.display = 'none';
     }
 
-   function sendAudioToServer(audioBlob) {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.wav");
-    formData.append("question_id", questionId);
-    formData.append("session_id", sessionId);
+    function sendAudioToServer(audioBlob) {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.wav");
+        formData.append("question_id", questionId);
+        formData.append("session_id", sessionId);
 
-    resultText.textContent = '';
-    processingFeedback.style.display = 'block';
-    disableButton();
+        resultText.textContent = '';
+        processingFeedback.style.display = 'block';
+        disableButton();
 
-    fetch(submitUrl, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        processingFeedback.style.display = 'none';
+        fetch(submitUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            processingFeedback.style.display = 'none';
 
-        if (data.status === 'error') {
-            throw new Error(data.message);
-        }
-
-        // Display evaluation text
-        resultText.innerHTML = data.message.trim().replace(/\n/g, '<br>');
-        resultText.style.color = 'initial';
-
-        if (data.next_question) {
-            // Prepare for next question
-            setTimeout(() => {
-                window.location.href = '/quiz-session/answer/' + sessionId;
-            }, 5000);  // Wait 5 seconds before loading next question
-        }
-
-        enableButton();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        processingFeedback.style.display = 'none';
-
-        // Handle both Error objects and error responses from the server
-        let errorMessage = error.message || 'Unknown error occurred22';
-
-        // If the error is from our server response, it will be in JSON format
-        if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
-            try {
-                const errorData = JSON.parse(errorMessage);
-                errorMessage = errorData.message || errorMessage;
-            } catch (e) {
-                console.error('Error parsing error message:', e);
+            if (data.status === 'error') {
+                throw new Error(data.message);
             }
-        }
 
-        resultText.innerHTML = 'Error: ' + errorMessage;
-        resultText.style.color = 'red';
-        enableButton();
+            // Display evaluation text
+            resultText.innerHTML = data.message.trim().replace(/\n/g, '<br>');
+            resultText.style.color = 'initial';
 
-        // Still allow moving to the next question after an error
-        setTimeout(() => {
-            window.location.href = '/quiz-session/answer/' + sessionId;
-        }, 100000);  // Wait 10 seconds before loading next question, giving more time to read the error
-    });
-}
+            // Show action buttons
+            actionButtons.style.display = 'block';
+
+            // Disable the record button
+            recordButton.disabled = true;
+
+            // Hide the next question button if there are no more questions
+            if (!data.has_next_question) {
+                document.getElementById('nextQuestionButton').style.display = 'none';
+            }
+
+            enableButton();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            processingFeedback.style.display = 'none';
+
+            let errorMessage = error.message || 'Unknown error occurred';
+
+            if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
+                try {
+                    const errorData = JSON.parse(errorMessage);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing error message:', e);
+                }
+            }
+
+            resultText.innerHTML = 'Error: ' + errorMessage;
+            resultText.style.color = 'red';
+            enableButton();
+        });
+    }
+
     function disableButton() {
         recordButton.disabled = true;
     }

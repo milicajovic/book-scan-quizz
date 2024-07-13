@@ -11,7 +11,6 @@ from . import quiz_session
 from .. import db
 from ..models import PrepSession, Quiz, Question, Answer
 
-
 @quiz_session.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
@@ -30,7 +29,6 @@ def start(quiz_id):
     db.session.commit()
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
-
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
@@ -46,7 +44,6 @@ def answer_question(session_id):
 
     return render_template('quiz_session/answer_question.html', question=current_question, session_id=session_id)
 
-
 @quiz_session.route('/complete/<session_id>')
 @login_required
 def complete(session_id):
@@ -59,17 +56,11 @@ def complete(session_id):
 
     return render_template('quiz_session/complete.html', session=prep_session)
 
-
-
-
 def save_audio_file(audio_file):
     filename = secure_filename(audio_file.filename)
     audio_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
     audio_file.save(audio_path)
     return audio_path, filename
-
-
-
 
 def store_answer(user_id, question_id, session_id, audio_path, filename, evaluation_result, correctness, completeness):
     answer = Answer(
@@ -85,18 +76,12 @@ def store_answer(user_id, question_id, session_id, audio_path, filename, evaluat
     db.session.add(answer)
     db.session.commit()
 
-
-
-
-
 def process_audio_response(audio_file, question, prep_session):
     audio_path, filename = save_audio_file(audio_file)
     evaluation_result = evaluate_audio_answer(question.question_text, question.answer, audio_path)
     # Ensure evaluation_result is a string
     if hasattr(evaluation_result, '__iter__') and not isinstance(evaluation_result, str):
         evaluation_result = ''.join(evaluation_result)
-
-    #transcription = transcribe_audio(audio_path)
 
     answer = Answer(
         user_id=current_user.id,
@@ -112,16 +97,14 @@ def process_audio_response(audio_file, question, prep_session):
     os.remove(audio_path)
     return evaluation_result
 
-
 def get_next_action(prep_session):
     next_question = prep_session.get_current_question()
     if next_question:
-        return {'next_question': True}
+        return {'has_next_question': True}
     else:
         prep_session.status = 'completed'
         db.session.commit()
-        return {'session_completed': True}
-
+        return {'has_next_question': False}
 
 @quiz_session.route('/evaluate_audio', methods=['POST'])
 @login_required
@@ -159,5 +142,5 @@ def evaluate_audio():
         return jsonify({
             'status': 'error',
             'message': f'An unexpected error occurred: {error_message}',
-            'next_question': True  # Ensure the client can move to the next question even if there's an error
+            'has_next_question': True  # Ensure the client can move to the next question even if there's an error
         }), 500
