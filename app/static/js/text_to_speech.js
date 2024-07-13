@@ -21,6 +21,18 @@ function initTextToSpeech() {
             }
         };
 
+        // Set up speed slider
+        const speedSlider = document.getElementById('tts-speed');
+        const speedValue = document.getElementById('tts-speed-value');
+        speedSlider.value = localStorage.getItem('ttsSpeed') || 1;
+        speedValue.textContent = `${speedSlider.value}x`;
+
+        speedSlider.addEventListener('input', function() {
+            speedValue.textContent = `${this.value}x`;
+            localStorage.setItem('ttsSpeed', this.value);
+            speechUtterance.rate = parseFloat(this.value);
+        });
+
         return true;
     } else {
         console.error("Text-to-speech not supported in this browser.");
@@ -45,6 +57,7 @@ function speak(text) {
     stopSpeaking();
 
     speechUtterance.text = text;
+    speechUtterance.rate = parseFloat(document.getElementById('tts-speed').value);
     speechSynthesis.speak(speechUtterance);
 
     // Display spoken text
