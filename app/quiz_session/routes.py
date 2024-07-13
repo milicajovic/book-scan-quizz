@@ -56,6 +56,7 @@ def complete(session_id):
 
     return render_template('quiz_session/complete.html', session=prep_session)
 
+
 def save_audio_file(audio_file):
     filename = secure_filename(audio_file.filename)
     audio_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
@@ -106,6 +107,29 @@ def get_next_action(prep_session):
         db.session.commit()
         return {'has_next_question': False}
 
+
+def generate(audio_file, question, prep_session):
+    audio_path, filename = save_audio_file(audio_file)
+    try:
+        for chunk in evaluate_audio_answer(question.question_text, question.answer, audio_path):
+            print(chunk)
+            yield chunk
+
+        # Store the answer after evaluation
+        answer = Answer(
+            user_id=current_user.id,
+            question_id=question.id,
+            prep_session_id=prep_session.id,
+            answer_text=transcribe_audio(audio_path),
+            audio_file_name=filename,
+            feedback="Evaluation completed"  # You might want to store the full feedback here
+        )
+        db.session.add(answer)
+        db.session.commit()
+    finally:
+        os.remove(audio_path)  # Clean up the audio file
+
+
 @quiz_session.route('/evaluate_audio', methods=['POST'])
 @login_required
 def evaluate_audio():
@@ -122,25 +146,21 @@ def evaluate_audio():
         prep_session = PrepSession.query.get(session_id)
 
         if not question or not prep_session:
-            current_app.logger.warning(f"Question or session not found: question_id={question_id}, session_id={session_id}")
+            current_app.logger.warning(
+                f"Question or session not found: question_id={question_id}, session_id={session_id}")
             return jsonify({'error': 'Question or session not found'}), 404
 
         current_app.logger.info(f"Processing audio response for question_id={question_id}, session_id={session_id}")
-        evaluation_result = process_audio_response(audio_file, question, prep_session)
 
-        next_action = get_next_action(prep_session)
-
-        return jsonify({
-            'status': 'success',
-            'message': evaluation_result,
-            **next_action
-        })
+        generator = generate(audio_file, question, prep_session)
+        return Response(stream_with_context(generator), content_type='text/plain')
 
     except Exception as e:
         current_app.logger.exception(f"Error in evaluate_audio: {str(e)}")
         error_message = escape(str(e))  # Escape the error message
         return jsonify({
             'status': 'error',
-            'message': f'An unexpected error occurred: {error_message}',
-            'has_next_question': True  # Ensure the client can move to the next question even if there's an error
+            'message': f'An unexpected error occurred: {error_message}'
         }), 500
+
+

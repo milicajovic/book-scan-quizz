@@ -105,67 +105,68 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         audioVisualization.style.display = 'none';
     }
 
-     function sendAudioToServer(audioBlob) {
+   function sendAudioToServer(audioBlob) {
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.wav");
         formData.append("question_id", questionId);
         formData.append("session_id", sessionId);
 
         resultText.textContent = '';
-        processingFeedback.style.display = 'block';
+        processingFeedback.style.display = 'none';
         disableButton();
 
         fetch(submitUrl, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            processingFeedback.style.display = 'none';
-
-            if (data.status === 'error') {
-                throw new Error(data.message);
-            }
-
-            // Display evaluation text
-            resultText.innerHTML = data.message.trim().replace(/\n/g, '<br>');
-            resultText.style.color = 'initial';
-
-            // Show action buttons
-            actionButtons.style.display = 'block';
-
-            // Hide the next question button if there are no more questions
-            if (!data.has_next_question) {
-                document.getElementById('nextQuestionButton').style.display = 'none';
-            }
-
-            // Read result aloud if auto-read is enabled
-            if (localStorage.getItem('autoReadResults') === 'true' && typeof speak === 'function') {
-                speak(data.message);
-            }
-
-            enableButton();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            processingFeedback.style.display = 'none';
-
-            let errorMessage = error.message || 'Unknown error occurred';
-
-            if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
-                try {
-                    const errorData = JSON.parse(errorMessage);
-                    errorMessage = errorData.message || errorMessage;
-                } catch (e) {
-                    console.error('Error parsing error message:', e);
+        .then(response => {
+            const reader = response.body.getReader();
+            return new ReadableStream({
+                start(controller) {
+                    function push() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                console.log('Stream complete');
+                                TextToSpeech.handleStreamEnd(); // Call handleStreamEnd when the stream is complete
+                                controller.close();
+                                enableButton();
+                                return;
+                            }
+                            const chunk = new TextDecoder().decode(value);
+                            console.log('Received chunk:', chunk);
+                            processChunk(chunk);
+                            controller.enqueue(value);
+                            push();
+                        });
+                    }
+                    push();
                 }
-            }
-
-            resultText.innerHTML = 'Error: ' + errorMessage;
-            resultText.style.color = 'red';
-            enableButton();
-        });
+            });
+        })
+        .catch(handleError);
     }
+
+
+    function processChunk(chunk) {
+        appendToUI(chunk);
+        if (localStorage.getItem('autoReadResults') === 'true') {
+            TextToSpeech.speak(chunk);
+        }
+    }
+
+
+    function appendToUI(text) {
+        resultText.innerHTML += text;
+    }
+
+    function handleError(error) {
+        console.error('Error:', error);
+        processingFeedback.style.display = 'none';
+        resultText.innerHTML += 'Error: ' + error.message;
+        resultText.style.color = 'red';
+        enableButton();
+    }
+
     function disableButton() {
         if (recordButton) recordButton.disabled = true;
     }

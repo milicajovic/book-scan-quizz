@@ -57,6 +57,7 @@ def evaluate_audio_answer(
 
         for chunk in response_stream:
             if chunk.text:
+                print("x*x*x*x" + chunk.text)
                 yield chunk.text
 
     except Exception as e:

@@ -4,10 +4,8 @@
 
 {% block content %}
     <style>
-        /* Add Bootstrap Icons */
         @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css");
 
-        /* Style for the chevron icon */
         .btn[aria-expanded="true"] .bi-chevron-down {
             transform: rotate(180deg);
         }
@@ -27,7 +25,6 @@
         <h1 class="mb-4">Question</h1>
         <p id="question-text" class="lead mb-4">{{ question.question_text }}</p>
 
-        <!-- TTS controls -->
         <div id="tts-controls" class="mb-4">
             <button class="btn btn-secondary mb-2 d-flex align-items-center justify-content-between w-100" type="button"
                     data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false"
@@ -54,8 +51,6 @@
             </div>
         </div>
 
-
-        <!-- Text display area for spoken text -->
         <div id="spoken-text-display" class="alert alert-info mt-3" style="display: none;"></div>
 
         <p class="mb-4">Press and hold the button to record your answer.</p>
@@ -87,7 +82,6 @@
             <p id="resultText"></p>
         </div>
 
-        <!-- New buttons for retry and next question -->
         <div id="actionButtons" class="text-center mt-4" style="display: none;">
             <button id="retryButton" class="btn btn-warning me-2">Retry</button>
             <button id="nextQuestionButton" class="btn btn-primary">Next Question</button>
@@ -95,13 +89,22 @@
     </div>
 {% endblock %}
 
+
 {% block extra_js %}
     <script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Text-to-Speech
+            TextToSpeech.init();
+
+            // Initialize quiz session TTS functionality
+            QuizSessionTTS.init();
+
             initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
+
             // Set up the next question URL for the quiz_session.js
             window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
         });
