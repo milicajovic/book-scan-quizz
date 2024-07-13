@@ -15,7 +15,11 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     const processingFeedback = document.getElementById('processingFeedback');
     const audioVisualization = document.getElementById('audioVisualization');
     const audioMeter = document.getElementById('audioMeter');
-    const actionButtons = document.getElementById('actionButtons');
+
+    if (!recordButton || !recordingFeedback || !recordingDuration || !resultText || !processingFeedback || !audioVisualization || !audioMeter) {
+        console.error('One or more required elements are missing from the DOM');
+        return;
+    }
 
     recordButton.addEventListener('mousedown', startRecording);
     recordButton.addEventListener('mouseup', stopRecording);
@@ -101,7 +105,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         audioVisualization.style.display = 'none';
     }
 
-    function sendAudioToServer(audioBlob) {
+     function sendAudioToServer(audioBlob) {
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.wav");
         formData.append("question_id", questionId);
@@ -130,12 +134,14 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             // Show action buttons
             actionButtons.style.display = 'block';
 
-            // Disable the record button
-            recordButton.disabled = true;
-
             // Hide the next question button if there are no more questions
             if (!data.has_next_question) {
                 document.getElementById('nextQuestionButton').style.display = 'none';
+            }
+
+            // Read result aloud if auto-read is enabled
+            if (localStorage.getItem('autoReadResults') === 'true' && typeof speak === 'function') {
+                speak(data.message);
             }
 
             enableButton();
@@ -160,12 +166,11 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             enableButton();
         });
     }
-
     function disableButton() {
-        recordButton.disabled = true;
+        if (recordButton) recordButton.disabled = true;
     }
 
     function enableButton() {
-        recordButton.disabled = false;
+        if (recordButton) recordButton.disabled = false;
     }
 }

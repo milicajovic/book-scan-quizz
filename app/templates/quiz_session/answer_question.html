@@ -9,6 +9,12 @@
 
     <!-- TTS controls -->
     <div id="tts-controls" class="mb-4">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="autoReadResults">
+            <label class="form-check-label" for="autoReadResults">
+                Automatically read results aloud
+            </label>
+        </div>
         <label for="voice-select" class="form-label">Select Voice:</label>
         <select id="voice-select" class="form-select">
             <!-- Voice options will be populated by JavaScript -->
@@ -54,14 +60,14 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
 <script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
+<script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
 <script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
 <script>
-    // Initialize audio recording and set up the next question URL
-    document.addEventListener('DOMContentLoaded', function() {
-        initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
-        window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
+    // Set up the next question URL for the quiz_session.js
+    window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
+});
 </script>
 {% endblock %}

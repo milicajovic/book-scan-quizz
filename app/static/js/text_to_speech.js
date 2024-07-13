@@ -79,6 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
             speak(textToSpeak);
         });
 
+        // Set up auto-read checkbox
+        const autoReadCheckbox = document.getElementById('autoReadResults');
+        autoReadCheckbox.checked = localStorage.getItem('autoReadResults') === 'true';
+        autoReadCheckbox.addEventListener('change', (event) => {
+            localStorage.setItem('autoReadResults', event.target.checked);
+        });
+
         // Automatically speak the question when the page loads
         const textToSpeak = document.getElementById('question-text').textContent;
 
