@@ -127,8 +127,11 @@ def generate(audio_file, question, prep_session):
         db.session.add(answer)
         db.session.commit()
     finally:
-        os.remove(audio_path)  # Clean up the audio file
+       # os.remove(audio_path)  # Clean up the audio file
+       pass
 
+def is_file_empty(file_path):
+    return os.path.getsize(file_path) == 0
 
 @quiz_session.route('/evaluate_audio', methods=['POST'])
 @login_required
@@ -141,6 +144,15 @@ def evaluate_audio():
         if not audio_file or not question_id or not session_id:
             current_app.logger.warning("Missing required data in evaluate_audio")
             return jsonify({'error': 'Missing required data'}), 400
+
+            # Check if audio file is empty or 0 bytes
+        if audio_file:
+            audio_file.seek(0, os.SEEK_END)
+            file_size = audio_file.tell()
+            audio_file.seek(0)  # Reset file pointer
+
+            if file_size == 0:
+                return jsonify({'error': 'File Empty'}), 400
 
         question = Question.query.get(question_id)
         prep_session = PrepSession.query.get(session_id)
