@@ -154,17 +154,18 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                     console.log('Stream complete');
                     processingFeedback.style.display = 'none';
                     recordButton.disabled = false;
-                    if (typeof TextToSpeech !== 'undefined' && typeof TextToSpeech.speak === 'function') {
-                        TextToSpeech.speak(accumulatedText);
-                    }
+                    TextToSpeech.finishSpeaking();
                     return;
                 }
 
                 const chunk = decoder.decode(value, {stream: true});
-                accumulatedText += chunk;
+                console.log('Received chunk:', chunk);
 
                 // Update UI
                 resultText.textContent += chunk;
+
+                // Pass chunk to TTS
+                TextToSpeech.addToSpeechQueue(chunk);
 
                 // Continue reading
                 readChunk();

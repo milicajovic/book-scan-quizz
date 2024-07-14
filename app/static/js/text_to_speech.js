@@ -4,6 +4,10 @@ const TextToSpeech = (function () {
     let speechUtterance;
     let voices = [];
     let currentVoice = null;
+    let isInitialized = false;
+    let isSpeaking = false;
+    let textBuffer = '';
+    let speechQueue = [];
 
     function initTextToSpeech() {
         return new Promise((resolve, reject) => {
@@ -87,21 +91,63 @@ const TextToSpeech = (function () {
         }
     }
 
-    function speak(text) {
-        if (!speechSynthesis || !currentVoice) {
-            console.error('Speech synthesis not initialized or no voice selected');
+
+    function addToSpeechQueue(text) {
+        textBuffer += text;
+        processSentences();
+    }
+
+    function processSentences() {
+        let sentenceEnd = textBuffer.search(/[.!?]\s/);
+        while (sentenceEnd !== -1) {
+            const sentence = textBuffer.slice(0, sentenceEnd + 1);
+            speechQueue.push(sentence.trim());
+            textBuffer = textBuffer.slice(sentenceEnd + 1);
+            sentenceEnd = textBuffer.search(/[.!?]\s/);
+        }
+        if (!isSpeaking) {
+            speakNext();
+        }
+    }
+
+    function speakNext() {
+        if (speechQueue.length === 0) {
+            isSpeaking = false;
             return;
         }
 
-        speechSynthesis.cancel(); // Stop any ongoing speech
-        speechUtterance.text = text;
+        isSpeaking = true;
+        const textToSpeak = speechQueue.shift();
+        console.log('Speaking:', textToSpeak);
+
+        speechUtterance = new SpeechSynthesisUtterance(textToSpeak);
         speechUtterance.voice = currentVoice;
         speechUtterance.rate = parseFloat(document.getElementById('tts-speed')?.value || 1);
-        speechSynthesis.speak(speechUtterance);
 
-        // Display spoken text
-        updateSpokenTextDisplay(text);
+        speechUtterance.onend = () => {
+            console.log('Finished speaking:', textToSpeak);
+            speakNext();
+        };
+
+        speechUtterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event.error);
+            speakNext();
+        };
+
+        speechSynthesis.speak(speechUtterance);
     }
+
+    function finishSpeaking() {
+        if (textBuffer.trim().length > 0) {
+            speechQueue.push(textBuffer.trim());
+            textBuffer = '';
+        }
+        if (!isSpeaking) {
+            speakNext();
+        }
+    }
+
+
 
     function speakWithoutBuffering(text) {
         if (!isInitialized || !currentVoice) {
@@ -145,9 +191,10 @@ const TextToSpeech = (function () {
     // Public API
     return {
         init: initTextToSpeech,
-        speak: speak,
+        addToSpeechQueue: addToSpeechQueue,
+        finishSpeaking: finishSpeaking,
         speakWithoutBuffering: speakWithoutBuffering,
-        stopSpeaking: stopSpeaking,
+        // stopSpeaking: stopSpeaking,
         setVoice: setVoice,
         isInitialized: () => isInitialized
     };
