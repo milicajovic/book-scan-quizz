@@ -21,8 +21,12 @@ const TextToSpeech = (function () {
                     .then(() => {
                         // Set up speed slider
                         setupSpeedSlider();
+
+                        // Set up voice selection
+                        setupVoiceSelection();
+
                         isInitialized = true;
-                        console.log("Text-to-speech initialized successfully2");
+                        console.log("Text-to-speech initialized successfully");
                         resolve(true);
                     })
                     .catch((error) => {
@@ -34,6 +38,35 @@ const TextToSpeech = (function () {
                 reject(new Error("Text-to-speech not supported"));
             }
         });
+    }
+
+    function setupVoiceSelection() {
+        const voiceSelect = document.getElementById('voice-select');
+        if (voiceSelect) {
+            const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+            console.log('Saved voice URI:', savedVoiceURI);
+            if (savedVoiceURI) {
+                voiceSelect.value = savedVoiceURI;
+                setVoice(savedVoiceURI);
+            }
+            voiceSelect.addEventListener('change', (event) => {
+                const selectedVoiceURI = event.target.value;
+                setVoice(selectedVoiceURI);
+                saveSelectedVoice(selectedVoiceURI);
+                console.log('Voice changed to:', selectedVoiceURI);
+
+                // Trigger re-reading of the question
+                if (typeof QuizSessionTTS !== 'undefined' && typeof QuizSessionTTS.readCurrentQuestion === 'function') {
+                    QuizSessionTTS.readCurrentQuestion();
+                }
+            });
+        } else {
+            console.error('Voice select element not found');
+        }
+    }
+
+    function saveSelectedVoice(voiceURI) {
+        localStorage.setItem('selectedVoiceURI', voiceURI);
     }
 
     function loadVoices() {
@@ -54,25 +87,26 @@ const TextToSpeech = (function () {
         });
     }
 
-function populateVoiceList() {
-    const voiceSelect = document.getElementById('voice-select');
-    if (voiceSelect) {
-        voiceSelect.innerHTML = '';
-        voices.forEach((voice) => {
-            const option = document.createElement('option');
-            option.textContent = `${voice.name} (${voice.lang})`;
-            option.value = voice.voiceURI;
-            voiceSelect.appendChild(option);
-        });
+    function populateVoiceList() {
+        const voiceSelect = document.getElementById('voice-select');
+        if (voiceSelect) {
+            voiceSelect.innerHTML = '';
+            voices.forEach((voice) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = voice.voiceURI;
+                voiceSelect.appendChild(option);
+            });
 
-        // Set the selected voice from localStorage
-        const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
-        if (savedVoiceURI) {
-            voiceSelect.value = savedVoiceURI;
+            // Set the selected voice from localStorage
+            const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+            if (savedVoiceURI) {
+                voiceSelect.value = savedVoiceURI;
+            }
         }
     }
-}
-     function setDefaultVoice() {
+
+    function setDefaultVoice() {
         const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
         if (savedVoiceURI) {
             setVoice(savedVoiceURI);
@@ -154,7 +188,6 @@ function populateVoiceList() {
     }
 
 
-
     function speakWithoutBuffering(text) {
         if (!isInitialized || !currentVoice) {
             console.error('Speech synthesis not initialized or no voice selected');
@@ -210,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded event fired in text_to_speech.js');
     TextToSpeech.init()
         .then(() => {
-            console.log('TextToSpeech initialized successfully');
+            console.log('TextToSpeech initialized successfully3');
 
             const voiceSelect = document.getElementById('voice-select');
             console.log('Voice select element:', voiceSelect ? 'found' : 'not found');

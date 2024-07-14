@@ -1,4 +1,4 @@
-const QuizSessionTTS = (function() {
+const QuizSessionTTS = (function () {
     async function initQuizSessionTTS() {
         console.log('Initializing QuizSessionTTS');
         try {
@@ -32,7 +32,7 @@ const QuizSessionTTS = (function() {
                     readQuestion();
                 }
 
-                autoReadCheckbox.addEventListener('change', function() {
+                autoReadCheckbox.addEventListener('change', function () {
                     console.log('Checkbox changed in QuizSessionTTS. New state:', this.checked);
                     localStorage.setItem('autoReadResults', this.checked);
                     if (this.checked) {
@@ -56,7 +56,18 @@ const QuizSessionTTS = (function() {
         }
     }
 
+    function readCurrentQuestion() {
+        const questionText = document.getElementById('question-text')?.textContent;
+        console.log('Reading current question:', questionText);
+        if (questionText && TextToSpeech.isInitialized()) {
+            TextToSpeech.speakWithoutBuffering(questionText);
+        } else {
+            console.error('Unable to read question: TextToSpeech not initialized or question text not found');
+        }
+    }
+
     return {
-        init: initQuizSessionTTS
+        init: initQuizSessionTTS,
+        readCurrentQuestion: readCurrentQuestion
     };
 })();
