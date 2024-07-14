@@ -2,9 +2,10 @@ import html
 import os
 from datetime import datetime
 
-from flask import jsonify, current_app
+from flask import current_app, jsonify, Response, stream_with_context
+from flask import make_response
 from flask import render_template, redirect, url_for
-from flask import request, Response, stream_with_context
+from flask import request
 from flask_login import current_user
 from flask_login import login_required
 from werkzeug.utils import secure_filename
@@ -61,24 +62,32 @@ def complete(session_id):
     prep_session.status = 'completed'
     db.session.commit()
 
-    return render_template('quiz_session/complete.html', session=prep_session)
+    response = make_response(render_template('quiz_session/complete.html', session=prep_session))
+    return response
 
 
-def validate_input(audio_file, question_id, session_id):
+def validate_input(audio_file, question_id, session_id, current_user_id):
     if not audio_file or not question_id or not session_id:
-        return jsonify({'error': 'Missing required data'}), 400
+        raise RuntimeError("Missing required data: audio file, question ID, or session ID")
 
-    audio_data = audio_file.read()
-    if len(audio_data) == 0:
-        return jsonify({'error': 'Audio data is empty'}), 400
+    if len(audio_file.read()) == 0:
+        audio_file.seek(0)  # Reset file pointer
+        raise RuntimeError("Audio data is empty")
+
+    audio_file.seek(0)  # Reset file pointer
 
     question = Question.query.get(question_id)
+    if not question:
+        raise RuntimeError(f"Question not found: {question_id}")
+
     prep_session = PrepSession.query.get(session_id)
+    if not prep_session:
+        raise RuntimeError(f"Prep session not found: {session_id}")
 
-    if not question or not prep_session:
-        return jsonify({'error': 'Question or session not found'}), 404
+    if prep_session.user_id != current_user_id:
+        raise RuntimeError("Unauthorized access to prep session")
 
-    return audio_data, question, prep_session
+    return question, prep_session
 
 
 def process_audio_file(audio_data, original_filename):
@@ -122,6 +131,27 @@ def generate_evaluation(question, audio_file_path):
         yield html.escape(error_message)
 
 
+
+def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
+    try:
+        yield from generate_evaluation(question, audio_file_path)
+    finally:
+        store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path))
+        if audio_file_path and os.path.exists(audio_file_path):
+            try:
+                os.remove(audio_file_path)
+                current_app.logger.info(f"Audio file deleted: {audio_file_path}")
+            except Exception as e:
+                current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
+
+
+def process_audio_file(audio_file):
+    filename = secure_filename(audio_file.filename)
+    audio_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    audio_file.save(audio_file_path)
+    return audio_file_path
+
+
 @quiz_session.route('/evaluate_audio', methods=['POST'])
 @login_required
 def evaluate_audio():
@@ -131,41 +161,29 @@ def evaluate_audio():
         question_id = request.form.get('question_id')
         session_id = request.form.get('session_id')
 
-        if not audio_file or not question_id or not session_id:
-            return jsonify({'error': 'Missing required data'}), 400
+        question, prep_session = validate_input(audio_file, question_id, session_id, current_user.id)
 
-        question = Question.query.get(question_id)
-        prep_session = PrepSession.query.get(session_id)
-
-        validate_input(audio_file, question, prep_session)
         audio_file_path = process_audio_file(audio_file)
         current_app.logger.info(f"Audio file processed: {audio_file_path}")
 
-        def generate():
-            try:
-                yield from generate_evaluation(question, audio_file_path)
-            finally:
-                store_answer(current_user.id, question.id, prep_session.id, os.path.basename(audio_file_path))
-                if audio_file_path and os.path.exists(audio_file_path):
-                    try:
-                        os.remove(audio_file_path)
-                        current_app.logger.info(f"Audio file deleted: {audio_file_path}")
-                    except Exception as e:
-                        current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
-
-        return Response(stream_with_context(generate()), content_type='text/plain')
+        return Response(
+            stream_with_context(generate_audio_evaluation(
+                question, audio_file_path, current_user.id, prep_session.id
+            )),
+            content_type='text/plain'
+        )
 
     except Exception as e:
         error_message = f"Error in evaluate_audio: {str(e)}"
         current_app.logger.exception(error_message)
-        return Response(html.escape(error_message), status=200, content_type='text/plain')
-
-
-def process_audio_file(audio_file):
-    filename = secure_filename(audio_file.filename)
-    audio_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-    audio_file.save(audio_file_path)
-    return audio_file_path
+        return jsonify({'error': error_message}), 500
+    # finally:
+    #     if audio_file_path and os.path.exists(audio_file_path):
+    #         try:
+    #             os.remove(audio_file_path)
+    #             current_app.logger.info(f"Audio file deleted in finally block: {audio_file_path}")
+    #         except Exception as e:
+    #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
 
 def store_answer(user_id, question_id, prep_session_id, audio_filename):
