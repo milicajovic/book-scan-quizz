@@ -63,5 +63,5 @@ def evaluate_audio_answer(
     except Exception as e:
         error_msg = f"Error in evaluate_audio_answer: {str(e)}"
         logging.error(error_msg)
-        logging.error(f"Call Stack:\n{traceback.format_exc()}")
+        #logging.error(f"Call Stack:\n{traceback.format_exc()}")
         raise  # Re-raise the original exception

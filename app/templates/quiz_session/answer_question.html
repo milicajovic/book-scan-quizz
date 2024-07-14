@@ -89,13 +89,16 @@
     </div>
 {% endblock %}
 
-
 {% block extra_js %}
     <script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
     <script>
+        // Pass the values directly to JavaScript
+        const QUESTION_ID = "{{ question.id }}";
+        const SESSION_ID = "{{ session_id }}";
+
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize Text-to-Speech
             TextToSpeech.init();
@@ -103,7 +106,8 @@
             // Initialize quiz session TTS functionality
             QuizSessionTTS.init();
 
-            initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', '{{ question.id }}', '{{ session_id }}');
+            // Use the global variables we defined earlier
+            initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', QUESTION_ID, SESSION_ID);
 
             // Set up the next question URL for the quiz_session.js
             window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
