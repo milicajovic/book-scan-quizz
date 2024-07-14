@@ -1,5 +1,5 @@
 // quiz_session.js
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const retryButton = document.getElementById('retryButton');
     const nextQuestionButton = document.getElementById('nextQuestionButton');
 
@@ -11,14 +11,17 @@ document.addEventListener('DOMContentLoaded', function() {
         nextQuestionButton.addEventListener('click', loadNextQuestion);
     }
 
-    // Initialize TTS for the question
-    if (typeof QuizSessionTTS !== 'undefined' && typeof QuizSessionTTS.init === 'function') {
-        const quizSessionTTS = QuizSessionTTS.init();
+    try {
+        // Initialize TTS for the question
+        const quizSessionTTS = await QuizSessionTTS.init();
         if (quizSessionTTS && typeof quizSessionTTS.readQuestion === 'function') {
+            // Attempt to read the question
             quizSessionTTS.readQuestion();
+        } else {
+            console.warn('QuizSessionTTS initialized but readQuestion is not available');
         }
-    } else {
-        console.error('QuizSessionTTS not available');
+    } catch (error) {
+        console.error('Failed to initialize QuizSessionTTS:', error);
     }
 });
 
@@ -29,7 +32,7 @@ function resetQuestion() {
     document.getElementById('recordButton').disabled = false;
 
     // Stop any ongoing TTS
-    if (typeof TextToSpeech !== 'undefined' && typeof TextToSpeech.stopSpeaking === 'function') {
+    if (TextToSpeech.isInitialized()) {
         TextToSpeech.stopSpeaking();
     }
 }

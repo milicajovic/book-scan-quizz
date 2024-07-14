@@ -1,33 +1,52 @@
 // text_to_speech.js
-const TextToSpeech = (function() {
+const TextToSpeech = (function () {
     let speechSynthesis;
     let speechUtterance;
     let voices = [];
     let currentVoice = null;
 
     function initTextToSpeech() {
-        if ('speechSynthesis' in window) {
-            speechSynthesis = window.speechSynthesis;
-            speechUtterance = new SpeechSynthesisUtterance();
+        return new Promise((resolve, reject) => {
+            if ('speechSynthesis' in window) {
+                speechSynthesis = window.speechSynthesis;
+                speechUtterance = new SpeechSynthesisUtterance();
 
-            // Load voices
-            loadVoices();
-            speechSynthesis.onvoiceschanged = loadVoices;
-
-            // Set up speed slider
-            setupSpeedSlider();
-
-            return true;
-        } else {
-            console.error("Text-to-speech not supported in this browser.");
-            return false;
-        }
+                // Load voices
+                loadVoices()
+                    .then(() => {
+                        // Set up speed slider
+                        setupSpeedSlider();
+                        isInitialized = true;
+                        console.log("Text-to-speech initialized successfully");
+                        resolve(true);
+                    })
+                    .catch((error) => {
+                        console.error("Error initializing text-to-speech:", error);
+                        reject(error);
+                    });
+            } else {
+                console.error("Text-to-speech not supported in this browser.");
+                reject(new Error("Text-to-speech not supported"));
+            }
+        });
     }
 
     function loadVoices() {
-        voices = speechSynthesis.getVoices();
-        populateVoiceList();
-        setDefaultVoice();
+        return new Promise((resolve) => {
+            voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                populateVoiceList();
+                setDefaultVoice();
+                resolve();
+            } else {
+                speechSynthesis.onvoiceschanged = () => {
+                    voices = speechSynthesis.getVoices();
+                    populateVoiceList();
+                    setDefaultVoice();
+                    resolve();
+                };
+            }
+        });
     }
 
     function populateVoiceList() {
@@ -60,7 +79,7 @@ const TextToSpeech = (function() {
             speedSlider.value = localStorage.getItem('ttsSpeed') || 1;
             speedValue.textContent = `${speedSlider.value}x`;
 
-            speedSlider.addEventListener('input', function() {
+            speedSlider.addEventListener('input', function () {
                 speedValue.textContent = `${this.value}x`;
                 localStorage.setItem('ttsSpeed', this.value);
                 speechUtterance.rate = parseFloat(this.value);
@@ -84,9 +103,8 @@ const TextToSpeech = (function() {
         updateSpokenTextDisplay(text);
     }
 
-     // New method to speak without buffering
     function speakWithoutBuffering(text) {
-        if (!speechSynthesis || !currentVoice) {
+        if (!isInitialized || !currentVoice) {
             console.error('Speech synthesis not initialized or no voice selected');
             return;
         }
@@ -130,33 +148,37 @@ const TextToSpeech = (function() {
         speak: speak,
         speakWithoutBuffering: speakWithoutBuffering,
         stopSpeaking: stopSpeaking,
-        setVoice: setVoice
+        setVoice: setVoice,
+        isInitialized: () => isInitialized
     };
 })();
 
 // Initialize TTS when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    if (TextToSpeech.init()) {
-        const voiceSelect = document.getElementById('voice-select');
-        if (voiceSelect) {
-            voiceSelect.addEventListener('change', (event) => {
-                TextToSpeech.setVoice(event.target.value);
-            });
-        }
+    TextToSpeech.init()
+        .then(() => {
+            const voiceSelect = document.getElementById('voice-select');
+            if (voiceSelect) {
+                voiceSelect.addEventListener('change', (event) => {
+                    TextToSpeech.setVoice(event.target.value);
+                });
+            }
 
-        // Set up auto-read checkbox
-        const autoReadCheckbox = document.getElementById('autoReadResults');
-        if (autoReadCheckbox) {
-            autoReadCheckbox.checked = localStorage.getItem('autoReadResults') === 'true';
-            autoReadCheckbox.addEventListener('change', (event) => {
-                localStorage.setItem('autoReadResults', event.target.checked);
-            });
-        }
-    } else {
-        // Hide TTS controls if not supported
-        const ttsControls = document.getElementById('tts-controls');
-        if (ttsControls) {
-            ttsControls.style.display = 'none';
-        }
-    }
+            // Set up auto-read checkbox
+            const autoReadCheckbox = document.getElementById('autoReadResults');
+            if (autoReadCheckbox) {
+                autoReadCheckbox.checked = localStorage.getItem('autoReadResults') === 'true';
+                autoReadCheckbox.addEventListener('change', (event) => {
+                    localStorage.setItem('autoReadResults', event.target.checked);
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Failed to initialize Text-to-Speech:", error);
+            // Hide TTS controls if not supported or initialization failed
+            const ttsControls = document.getElementById('tts-controls');
+            if (ttsControls) {
+                ttsControls.style.display = 'none';
+            }
+        });
 });
