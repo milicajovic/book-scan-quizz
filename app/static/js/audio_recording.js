@@ -1,4 +1,5 @@
-// Global variables
+// audio_recording.js
+
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
@@ -14,6 +15,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
 
     let startTime;
     let durationInterval;
+    let visualizationInterval;
 
     recordButton.addEventListener('mousedown', startRecording);
     recordButton.addEventListener('mouseup', stopRecording);
@@ -33,6 +35,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                 mediaRecorder.start();
                 startTime = Date.now();
                 updateUI(true);
+                startVisualization(stream);
 
                 mediaRecorder.addEventListener("dataavailable", event => {
                     audioChunks.push(event.data);
@@ -43,6 +46,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                     const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
                     console.log(`Audio blob created, size: ${audioBlob.size} bytes`);
                     sendAudioToServer(audioBlob);
+                    stopVisualization();
                 });
             })
             .catch(error => {
@@ -70,6 +74,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         recordButton.classList.toggle('btn-success', !isRecording);
         recordButton.textContent = isRecording ? 'Recording...' : 'Record';
         recordingFeedback.style.display = isRecording ? 'block' : 'none';
+        audioVisualization.style.display = isRecording ? 'block' : 'none';
 
         if (isRecording) {
             durationInterval = setInterval(updateDuration, 1000);
@@ -84,10 +89,28 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         recordingDuration.textContent = duration;
     }
 
-    /**
-     * Sends the recorded audio to the server and processes the streaming response.
-     * @param {Blob} audioBlob - The recorded audio as a Blob.
-     */
+    function startVisualization(stream) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        visualizationInterval = setInterval(() => {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            const volume = Math.min(100, Math.max(0, average));
+            audioMeter.style.width = volume + '%';
+        }, 100);
+    }
+
+    function stopVisualization() {
+        clearInterval(visualizationInterval);
+        audioMeter.style.width = '0%';
+    }
+
     function sendAudioToServer(audioBlob) {
         console.log(`Preparing to send audio to server. Blob size: ${audioBlob.size} bytes`);
 
@@ -121,10 +144,6 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             });
     }
 
-    /**
-     * Processes the streaming response from the server.
-     * @param {ReadableStreamDefaultReader} reader - The reader for the response body stream.
-     */
     function processStreamResponse(reader) {
         let accumulatedText = '';
         const decoder = new TextDecoder();
@@ -135,7 +154,9 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                     console.log('Stream complete');
                     processingFeedback.style.display = 'none';
                     recordButton.disabled = false;
-                    TextToSpeech.handleStreamEnd();
+                    if (typeof TextToSpeech !== 'undefined' && typeof TextToSpeech.speak === 'function') {
+                        TextToSpeech.speak(accumulatedText);
+                    }
                     return;
                 }
 
@@ -144,15 +165,6 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
 
                 // Update UI
                 resultText.textContent += chunk;
-
-                // Process accumulated text for complete sentences
-                const sentences = accumulatedText.match(/[^.!?]+[.!?]+/g) || [];
-                sentences.forEach(sentence => {
-                    TextToSpeech.speak(sentence.trim());
-                });
-
-                // Keep any remaining text that doesn't end with sentence-ending punctuation
-                accumulatedText = accumulatedText.replace(/^.*[.!?]+\s*/g, '');
 
                 // Continue reading
                 readChunk();
@@ -167,5 +179,3 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         readChunk();
     }
 }
-
-// The DOMContentLoaded event listener has been moved to the HTML template

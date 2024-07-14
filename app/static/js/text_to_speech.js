@@ -3,9 +3,7 @@ const TextToSpeech = (function() {
     let speechSynthesis;
     let speechUtterance;
     let voices = [];
-    let speechQueue = [];
-    let isSpeaking = false;
-    let textBuffer = '';
+    let currentVoice = null;
 
     function initTextToSpeech() {
         if ('speechSynthesis' in window) {
@@ -13,30 +11,11 @@ const TextToSpeech = (function() {
             speechUtterance = new SpeechSynthesisUtterance();
 
             // Load voices
-            voices = speechSynthesis.getVoices();
-            speechSynthesis.onvoiceschanged = () => {
-                voices = speechSynthesis.getVoices();
-                populateVoiceList();
-
-                // Set the saved voice after populating the list
-                const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
-                if (savedVoiceURI) {
-                    document.getElementById('voice-select').value = savedVoiceURI;
-                    setVoice(savedVoiceURI);
-                }
-            };
+            loadVoices();
+            speechSynthesis.onvoiceschanged = loadVoices;
 
             // Set up speed slider
-            const speedSlider = document.getElementById('tts-speed');
-            const speedValue = document.getElementById('tts-speed-value');
-            speedSlider.value = localStorage.getItem('ttsSpeed') || 1;
-            speedValue.textContent = `${speedSlider.value}x`;
-
-            speedSlider.addEventListener('input', function() {
-                speedValue.textContent = `${this.value}x`;
-                localStorage.setItem('ttsSpeed', this.value);
-                speechUtterance.rate = parseFloat(this.value);
-            });
+            setupSpeedSlider();
 
             return true;
         } else {
@@ -45,120 +24,99 @@ const TextToSpeech = (function() {
         }
     }
 
+    function loadVoices() {
+        voices = speechSynthesis.getVoices();
+        populateVoiceList();
+        setDefaultVoice();
+    }
+
     function populateVoiceList() {
         const voiceSelect = document.getElementById('voice-select');
-        voiceSelect.innerHTML = '';
-        voices.forEach((voice) => {
-            const option = document.createElement('option');
-            option.textContent = `${voice.name} (${voice.lang})`;
-            option.value = voice.voiceURI;
-            voiceSelect.appendChild(option);
-        });
+        if (voiceSelect) {
+            voiceSelect.innerHTML = '';
+            voices.forEach((voice) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = voice.voiceURI;
+                voiceSelect.appendChild(option);
+            });
+        }
+    }
+
+    function setDefaultVoice() {
+        const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+        if (savedVoiceURI) {
+            setVoice(savedVoiceURI);
+        } else {
+            // Set a default voice (e.g., first available voice)
+            setVoice(voices[0]?.voiceURI);
+        }
+    }
+
+    function setupSpeedSlider() {
+        const speedSlider = document.getElementById('tts-speed');
+        const speedValue = document.getElementById('tts-speed-value');
+        if (speedSlider && speedValue) {
+            speedSlider.value = localStorage.getItem('ttsSpeed') || 1;
+            speedValue.textContent = `${speedSlider.value}x`;
+
+            speedSlider.addEventListener('input', function() {
+                speedValue.textContent = `${this.value}x`;
+                localStorage.setItem('ttsSpeed', this.value);
+                speechUtterance.rate = parseFloat(this.value);
+            });
+        }
     }
 
     function speak(text) {
-        textBuffer += text;
-        processSentenceBuffer();
-    }
-
-    function processSentenceBuffer() {
-        const sentenceEndRegex = /[.!?]\s*/g;
-        let match;
-        let lastIndex = 0;
-
-        while ((match = sentenceEndRegex.exec(textBuffer)) !== null) {
-            const sentence = textBuffer.slice(lastIndex, match.index + match[0].length).trim();
-            if (sentence) {
-                enqueueSentence(sentence);
-            }
-            lastIndex = sentenceEndRegex.lastIndex;
-        }
-
-        // Remove processed text from the buffer
-        textBuffer = textBuffer.slice(lastIndex);
-
-        // If there's no ongoing speech, start speaking
-        if (!isSpeaking) {
-            speakNext();
-        }
-    }
-
-    function enqueueSentence(sentence) {
-        speechQueue.push(sentence);
-    }
-
-    function speakNext() {
-        if (speechQueue.length === 0) {
-            isSpeaking = false;
+        if (!speechSynthesis || !currentVoice) {
+            console.error('Speech synthesis not initialized or no voice selected');
             return;
         }
 
-        isSpeaking = true;
-        const sentence = speechQueue.shift();
-        speechUtterance.text = sentence;
-        speechUtterance.rate = parseFloat(document.getElementById('tts-speed').value);
+        speechSynthesis.cancel(); // Stop any ongoing speech
+        speechUtterance.text = text;
+        speechUtterance.voice = currentVoice;
+        speechUtterance.rate = parseFloat(document.getElementById('tts-speed')?.value || 1);
         speechSynthesis.speak(speechUtterance);
 
         // Display spoken text
-        const textDisplay = document.getElementById('spoken-text-display');
-        if (textDisplay) {
-            textDisplay.textContent = sentence;
-            textDisplay.style.display = 'block';
+        updateSpokenTextDisplay(text);
+    }
+
+     // New method to speak without buffering
+    function speakWithoutBuffering(text) {
+        if (!speechSynthesis || !currentVoice) {
+            console.error('Speech synthesis not initialized or no voice selected');
+            return;
         }
 
-        speechUtterance.onend = () => {
-            speakNext();
-        };
+        speechSynthesis.cancel(); // Stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = currentVoice;
+        utterance.rate = parseFloat(document.getElementById('tts-speed')?.value || 1);
+        speechSynthesis.speak(utterance);
+
+        // Display spoken text
+        updateSpokenTextDisplay(text);
     }
 
     function stopSpeaking() {
         if (speechSynthesis) {
             speechSynthesis.cancel();
         }
-        speechQueue = [];
-        textBuffer = '';
-        isSpeaking = false;
     }
 
     function setVoice(voiceURI) {
         const voice = voices.find(v => v.voiceURI === voiceURI);
         if (voice) {
+            currentVoice = voice;
             speechUtterance.voice = voice;
             localStorage.setItem('selectedVoiceURI', voiceURI);
         }
     }
 
-    function speakWithoutBuffering(text) {
-        if (!speechSynthesis) {
-            console.error('Speech synthesis not initialized');
-            return;
-        }
-
-        // Cancel any ongoing speech
-        speechSynthesis.cancel();
-
-        // Clear any existing queue and buffer
-        speechQueue = [];
-        textBuffer = '';
-        isSpeaking = false;
-
-        // Create a new utterance for the entire text
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = parseFloat(document.getElementById('tts-speed').value);
-
-        // Use the selected voice
-        const selectedVoiceURI = localStorage.getItem('selectedVoiceURI');
-        if (selectedVoiceURI) {
-            const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
-            if (voice) {
-                utterance.voice = voice;
-            }
-        }
-
-        // Speak the entire text
-        speechSynthesis.speak(utterance);
-
-        // Display spoken text
+    function updateSpokenTextDisplay(text) {
         const textDisplay = document.getElementById('spoken-text-display');
         if (textDisplay) {
             textDisplay.textContent = text;
@@ -166,25 +124,13 @@ const TextToSpeech = (function() {
         }
     }
 
-    // Function to handle end of stream
-    function handleStreamEnd() {
-        if (textBuffer.trim()) {
-            enqueueSentence(textBuffer.trim());
-            textBuffer = '';
-            if (!isSpeaking) {
-                speakNext();
-            }
-        }
-    }
-
     // Public API
     return {
         init: initTextToSpeech,
         speak: speak,
-        stopSpeaking: stopSpeaking,
-        setVoice: setVoice,
         speakWithoutBuffering: speakWithoutBuffering,
-        handleStreamEnd: handleStreamEnd
+        stopSpeaking: stopSpeaking,
+        setVoice: setVoice
     };
 })();
 

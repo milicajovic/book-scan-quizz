@@ -19,6 +19,19 @@
             width: 30px;
             text-align: right;
         }
+
+        #audioVisualization {
+            height: 20px;
+            background-color: #f0f0f0;
+            margin-top: 10px;
+        }
+
+        #audioMeter {
+            height: 100%;
+            width: 0%;
+            background-color: #007bff;
+            transition: width 0.1s ease;
+        }
     </style>
 
     <div class="container">
@@ -67,10 +80,7 @@
         </div>
 
         <div id="audioVisualization" class="mt-3" style="display: none;">
-            <div class="progress">
-                <div id="audioMeter" class="progress-bar bg-info" role="progressbar" style="width: 0%;"
-                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
+            <div id="audioMeter"></div>
         </div>
 
         <div id="processingFeedback" class="text-center my-2" style="display: none;">
