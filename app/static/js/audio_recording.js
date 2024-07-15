@@ -145,6 +145,15 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             });
     }
 
+    function showNextQuestionButton() {
+        const actionButtons = document.getElementById('actionButtons');
+        if (actionButtons) {
+            actionButtons.classList.remove('d-none'); //if using Bootstrap
+        } else {
+            console.error('Action buttons container not found');
+        }
+    }
+
     function processStreamResponse(reader) {
         let accumulatedText = '';
         const decoder = new TextDecoder();
@@ -155,6 +164,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                     console.log('Stream complete');
                     processingFeedback.style.display = 'none';
                     recordButton.disabled = false;
+                    showNextQuestionButton();
                     TextToSpeech.finishSpeaking();
                     return;
                 }

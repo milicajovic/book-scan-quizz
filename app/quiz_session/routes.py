@@ -36,6 +36,7 @@ def start(quiz_id):
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
 
+
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
