@@ -90,7 +90,8 @@ def validate_input(audio_file, question_id, session_id, current_user_id):
     return question, prep_session
 
 
-def process_audio_file(audio_data, original_filename):
+def process_audio_file(audio_data):
+    original_filename = secure_filename(audio_data.filename)
     # Get the file extension from the original filename
     _, file_extension = os.path.splitext(original_filename)
 
@@ -110,8 +111,8 @@ def process_audio_file(audio_data, original_filename):
     audio_file_path = os.path.join(upload_folder, new_filename)
 
     # Write the audio data to the file
-    with open(audio_file_path, 'wb') as audio_file:
-        audio_file.write(audio_data)
+    audio_data.save(audio_file_path)
+
 
     current_app.logger.info(f"Audio file created: {audio_file_path}")
     return audio_file_path
@@ -139,17 +140,12 @@ def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_i
         store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path))
         if audio_file_path and os.path.exists(audio_file_path):
             try:
-                os.remove(audio_file_path)
+               # os.remove(audio_file_path)
                 current_app.logger.info(f"Audio file deleted: {audio_file_path}")
             except Exception as e:
                 current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
 
 
-def process_audio_file(audio_file):
-    filename = secure_filename(audio_file.filename)
-    audio_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-    audio_file.save(audio_file_path)
-    return audio_file_path
 
 
 @quiz_session.route('/evaluate_audio', methods=['POST'])

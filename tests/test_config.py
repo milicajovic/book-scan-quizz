@@ -12,5 +12,6 @@ TEST_IMAGES_DIR = os.path.join(TEST_FILES_DIR, 'images')
 DUMMY_SERBIAN = os.path.join(TEST_AUDIO_DIR, 'dummy_serbian.wav')
 GERMAN_WRONG = os.path.join(TEST_AUDIO_DIR, 'german_wrong_sentence.wav')
 PHOTOSYNTHESIS_AUDIO = os.path.join(TEST_AUDIO_DIR, 'dummy_serbian.wav')
+EMPTY_AUDIO = os.path.join(TEST_AUDIO_DIR, 'no_text_audio.wav')
 
 # You can add more configurations here as needed

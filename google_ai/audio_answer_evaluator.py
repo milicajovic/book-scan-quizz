@@ -6,7 +6,8 @@ from .config import GENERATION_CONFIG, SAFETY_SETTINGS, DEFAULT_MODEL
 
 SYSTEM_PROMPT = """
 You are a kind teacher AI that receives a Question, a correct-answer, and a student-answer as audio file uploaded in this chat. 
-Your task is to evaluate the student-answer based on the information from the correct-answer provided. 
+Your task is to evaluate the student-answer based on the information from the correct-answer provided.
+If you think that the answer is empty, ask the user to repeat the answer and fix potential issues in recording.
 Analyze the language of correct-answer,  and provide response in that language.Your response should be in this language.
 You must provide feedback in a friendly and supportive tone. The output should be formatted as a text and should have following segments 
 
@@ -57,7 +58,7 @@ def evaluate_audio_answer(
 
         for chunk in response_stream:
             if chunk.text:
-                print("x*x*x*x" + chunk.text)
+                #print("x*x*x*x" + chunk.text)
                 yield chunk.text
 
     except Exception as e:
