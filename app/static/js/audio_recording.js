@@ -65,6 +65,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         isRecording = false;
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
             updateUI(false);
         }
     }
