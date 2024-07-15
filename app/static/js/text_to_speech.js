@@ -243,50 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded event fired in text_to_speech.js');
     TextToSpeech.init()
         .then(() => {
-            console.log('TextToSpeech initialized successfully3');
-
-            const voiceSelect = document.getElementById('voice-select');
-            console.log('Voice select element:', voiceSelect ? 'found' : 'not found');
-            if (voiceSelect) {
-                const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
-                console.log('Saved voice URI:', savedVoiceURI);
-                if (savedVoiceURI) {
-                    voiceSelect.value = savedVoiceURI;
-                }
-                voiceSelect.addEventListener('change', (event) => {
-                    TextToSpeech.setVoice(event.target.value);
-                    console.log('Voice changed to:', event.target.value);
-                });
-            } else {
-                console.error('Voice select element not found');
-            }
-
-            // Set up auto-read checkbox
-            const autoReadCheckbox = document.getElementById('autoReadResults');
-            console.log('Auto-read checkbox:', autoReadCheckbox ? 'found' : 'not found');
-            if (autoReadCheckbox) {
-                const savedAutoRead = localStorage.getItem('autoReadResults');
-                console.log('Saved autoReadResults:', savedAutoRead);
-                autoReadCheckbox.checked = savedAutoRead === 'true';
-                console.log('Checkbox set to:', autoReadCheckbox.checked);
-
-                autoReadCheckbox.addEventListener('change', (event) => {
-                    localStorage.setItem('autoReadResults', event.target.checked);
-                    console.log('Checkbox changed to:', event.target.checked);
-                });
-            } else {
-                console.error('Auto-read checkbox not found');
-            }
-
-            // Check for speed slider
-            const speedSlider = document.getElementById('tts-speed');
-            console.log('Speed slider:', speedSlider ? 'found' : 'not found');
-            if (speedSlider) {
-                const savedSpeed = localStorage.getItem('ttsSpeed');
-                console.log('Saved speed:', savedSpeed);
-                speedSlider.value = savedSpeed || 1;
-                console.log('Speed slider set to:', speedSlider.value);
-            }
+            console.log('TextToSpeech initialized successfully');
         })
         .catch((error) => {
             console.error("Failed to initialize Text-to-Speech:", error);
