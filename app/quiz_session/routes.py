@@ -1,6 +1,7 @@
 import html
 import os
 from datetime import datetime
+from typing import Optional
 
 from flask import current_app, jsonify, Response, stream_with_context
 from flask import make_response
@@ -131,11 +132,63 @@ def generate_evaluation(question, audio_file_path):
         yield html.escape(error_message)
 
 
-def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
+def parse_score(score_str: str) -> Optional[float]:
+    """Parse a score string into a float."""
     try:
-        yield from generate_evaluation(question, audio_file_path)
+        return float(score_str)
+    except ValueError:
+        current_app.logger.warning(f"Invalid score: {score_str}")
+        return None
+
+
+def extract_feedback_and_scores(full_response: str) -> tuple[str, float, float]:
+    """
+    Extracts feedback, correctness score, and completeness score from the AI response.
+
+    Args:
+    full_response (str): The complete response string from the AI.
+
+    Returns:
+    tuple: Contains feedback (str), correctness score (float), and completeness score (float).
+    """
+    parts = full_response.split('####')
+
+    if len(parts) < 2:
+        current_app.logger.warning("Response does not contain expected '####' separator")
+        return "", 0.0, 0.0
+
+    feedback = parts[0].strip()
+    scores_part = parts[1].strip()
+
+    correctness = 0.0
+    completeness = 0.0
+
+    for score in scores_part.split():
+        key, _, value = score.lower().partition(':')
+        if key == 'correctness':
+            correctness = parse_score(value) or 0.0
+        elif key == 'completeness':
+            completeness = parse_score(value) or 0.0
+        else:
+            current_app.logger.warning(f"Unknown score type: {key}")
+
+    return feedback, correctness, completeness
+
+
+def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
+    full_response = ""
+
+    try:
+        for chunk in generate_evaluation(question, audio_file_path):
+            full_response += chunk
+            yield chunk
+
+        feedback, correctness, completeness = extract_feedback_and_scores(full_response)
+        store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path),
+                     feedback, correctness, completeness)
+
     finally:
-        store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path))
+
         if audio_file_path and os.path.exists(audio_file_path):
             try:
                 # os.remove(audio_file_path)
@@ -178,15 +231,17 @@ def evaluate_audio():
     #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
 
-def store_answer(user_id, question_id, prep_session_id, audio_filename):
+def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedback, correctness, completeness):
     answer = Answer(
         user_id=user_id,
         question_id=question_id,
         prep_session_id=prep_session_id,
-        answer_text="Audio answer provided",
-        audio_file_name=audio_filename,
-        feedback="Evaluation completed"
+        answer_text="parsing audio directly, missing this info",
+        audio_file_name=audio_file_name,
+        feedback=feedback,
+        correctness=correctness,
+        completeness=completeness
     )
     db.session.add(answer)
     db.session.commit()
-    current_app.logger.info("Answer stored in database")
+    current_app.logger.info(f"Answer stored in database for user {user_id}, question {question_id}")
