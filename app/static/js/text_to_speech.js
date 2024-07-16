@@ -233,7 +233,7 @@ const TextToSpeech = (function () {
         addToSpeechQueue: addToSpeechQueue,
         finishSpeaking: finishSpeaking,
         speakWithoutBuffering: speakWithoutBuffering,
-        // stopSpeaking: stopSpeaking,
+        stopSpeaking: stopSpeaking,
         setVoice: setVoice,
         isInitialized: () => isInitialized
     };

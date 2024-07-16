@@ -36,7 +36,6 @@ def start(quiz_id):
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
 
-
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
@@ -114,7 +113,6 @@ def process_audio_file(audio_data):
     # Write the audio data to the file
     audio_data.save(audio_file_path)
 
-
     current_app.logger.info(f"Audio file created: {audio_file_path}")
     return audio_file_path
 
@@ -133,7 +131,6 @@ def generate_evaluation(question, audio_file_path):
         yield html.escape(error_message)
 
 
-
 def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
     try:
         yield from generate_evaluation(question, audio_file_path)
@@ -141,12 +138,10 @@ def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_i
         store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path))
         if audio_file_path and os.path.exists(audio_file_path):
             try:
-               # os.remove(audio_file_path)
+                # os.remove(audio_file_path)
                 current_app.logger.info(f"Audio file deleted: {audio_file_path}")
             except Exception as e:
                 current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
-
-
 
 
 @quiz_session.route('/evaluate_audio', methods=['POST'])
