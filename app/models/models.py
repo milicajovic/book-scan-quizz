@@ -69,6 +69,10 @@ class PrepSession(db.Model):
     quiz = db.relationship("Quiz", back_populates="prep_sessions")
     answers = db.relationship("Answer", back_populates="prep_session")
 
+    def get_ordered_answers(self):
+        return Answer.query.filter(Answer.prep_session_id == self.id) \
+            .order_by(Answer.date) \
+            .all()
     def get_current_question(self):
         answered_question_ids = [answer.question_id for answer in self.answers]
         next_question = Question.query.filter(
@@ -76,6 +80,14 @@ class PrepSession(db.Model):
             ~Question.id.in_(answered_question_ids) # NOT in
         ).order_by(Question.id).first()
         return next_question
+
+    def get_distinct_answered_questions_count(self):
+        return db.session.query(func.count(func.distinct(Answer.question_id))) \
+            .filter(Answer.prep_session_id == self.id) \
+            .scalar()
+
+    def get_total_quiz_questions_count(self):
+        return Question.query.filter_by(quiz_id=self.quiz_id).count()
 
 class PageScan(db.Model):
     __tablename__ = 'page_scan'

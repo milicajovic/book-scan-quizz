@@ -60,12 +60,27 @@ def complete(session_id):
     if prep_session.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
-    prep_session.status = 'completed'
-    db.session.commit()
+    # Get counts using the new methods
+    answered_questions_count = prep_session.get_distinct_answered_questions_count()
+    total_questions_count = prep_session.get_total_quiz_questions_count()
 
-    response = make_response(render_template('quiz_session/complete.html', session=prep_session))
+    # Check if all questions have been answered
+    if answered_questions_count == total_questions_count:
+        prep_session.status = 'completed'
+        db.session.commit()
+
+    # Fetch all answers with their related questions, ordered by question position
+    answers = Answer.query.join(Question)\
+        .filter(Answer.prep_session_id == prep_session.id)\
+        .order_by(Question.position, Answer.id)\
+        .all()
+
+    response = make_response(render_template('quiz_session/complete.html',
+                                             session=prep_session,
+                                             answers=answers,
+                                             answered_questions_count=answered_questions_count,
+                                             total_questions_count=total_questions_count))
     return response
-
 
 def validate_input(audio_file, question_id, session_id, current_user_id):
     if not audio_file or not question_id or not session_id:
