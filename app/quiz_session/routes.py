@@ -9,6 +9,7 @@ from flask import render_template, redirect, url_for
 from flask import request
 from flask_login import current_user
 from flask_login import login_required
+from werkzeug.exceptions import NotFound
 from werkzeug.utils import secure_filename
 
 from google_ai.audio_answer_evaluator import evaluate_audio_answer
@@ -44,15 +45,29 @@ def answer_question(session_id):
     if prep_session.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
-    current_question = prep_session.get_current_question()
-    if not current_question:
-        prep_session.status = 'completed'
-        db.session.commit()
+    answered_count = prep_session.get_distinct_answered_questions_count()
+    total_count = prep_session.get_total_quiz_questions_count()
+
+    if total_count == 0:
+        current_app.logger.error(f"Quiz {prep_session.quiz_id} has no questions")
+        raise NotFound("This quiz has no questions. Please contact the administrator.")
+
+    if answered_count >= total_count:
         return redirect(url_for('quiz_session.complete', session_id=session_id))
 
-    return render_template('quiz_session/answer_question.html', question=current_question, session_id=session_id)
+    current_question = prep_session.get_current_question()
+    if not current_question:
+        current_app.logger.error(f"No question found for session {session_id} when one was expected")
+        raise NotFound("No question found when one was expected. The quiz may be in an inconsistent state.")
 
+    progress_percentage = (answered_count / total_count) * 100
 
+    return render_template('quiz_session/answer_question.html',
+                           question=current_question,
+                           session_id=session_id,
+                           progress_percentage=progress_percentage,
+                           answered_count=answered_count,
+                           total_count=total_count)
 @quiz_session.route('/complete/<session_id>')
 @login_required
 def complete(session_id):

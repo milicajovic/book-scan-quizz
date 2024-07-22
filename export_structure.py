@@ -6,7 +6,7 @@ def should_exclude(path):
     exclude_dirs = {'.venv', 'venv', '__pycache__', 'node_modules', '.git',
                     'audio_uploads', '.idea', '.DS_Store'}
     exclude_extensions = {'.pyc', '.pyo', '.pyd', '.db', '.sqlite3', '.wav', '.pdf',
-                          '.png', '.jpg', '.jpeg', '.json', '.DS_Store'}
+                          '.png', '.jpg', '.jpeg', '.json', '.DS_Store', '.sqlite'}
 
     parts = path.split(os.sep)
     #print(parts)
