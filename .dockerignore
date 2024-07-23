@@ -1,0 +1,26 @@
+# Ignore everything
+*
+
+# Allow files and directories
+!app
+!app/**
+!requirements.txt
+!config.py
+!run.py
+!migrations
+!migrations/**
+!google_ai
+!google_ai/**
+!.env
+
+# Ignore unnecessary files inside allowed directories
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.DS_Store
+**/.env
+
+# Ignore test and documentation
+**/tests
+**/docs
