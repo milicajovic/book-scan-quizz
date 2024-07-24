@@ -22,7 +22,6 @@ steps:
     - |
       FLASK_CONFIG=testing,
       GOOGLE_CLIENT_ID=792066325521-dgtt0c4cp36nace09o3fcslflh9m4s4h.apps.googleusercontent.com
-
 # Use the custom service account
 serviceAccount: 'cloudbuild-deploy-account@earn-your-screentime.iam.gserviceaccount.com'
 options:
