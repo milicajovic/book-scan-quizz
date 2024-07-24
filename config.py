@@ -10,9 +10,9 @@ def get_required_env_var(var_name):
         raise ValueError(f"Missing required environment variable: {var_name}")
     return value
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    #SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
+    GOOGLE_CLIENT_ID = get_required_env_var('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = get_required_env_var('GOOGLE_CLIENT_SECRET')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'audio_uploads'
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or "AIzaSyDQyT_XQpie3uGPa2DbYGf6yaNie0CzyV0"
@@ -26,13 +26,13 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dev.sqlite')
-    SQLALCHEMY_ECHO = True  # Enable SQL query logging for development
+    SQLALCHEMY_ECHO = False  # Enable SQL query logging for development
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = get_required_env_var('DB_URL')
-    SQLALCHEMY_ECHO = True  # Enable SQL query logging for testing
+    SQLALCHEMY_ECHO = False  # Enable SQL query logging for testing
 
 
 class ProductionConfig(Config):

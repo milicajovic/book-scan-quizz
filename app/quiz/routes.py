@@ -57,7 +57,7 @@ def create():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating quiz: {str(e)}")
-            flash('An error occurred while creating the quiz. Please try again.', 'error')
+            flash(f'An error occurred while creating {str(e)}', 'error')
 
     return render_template('quiz/create.html', form=form)
 
