@@ -18,13 +18,10 @@ steps:
     - 'us-central1'
     - '--platform'
     - 'managed'
-    - '--set-env-vars'
+    - '--update-env-vars'
     - |
       FLASK_CONFIG=testing,
-      DB_URL=postgresql://testbuser:ZtestTez321!@10.100.176.2:5432/test-db-cloud?connect_timeout=10,
-      GOOGLE_CLIENT_ID=792066325521-dgtt0c4cp36nace09o3fcslflh9m4s4h.apps.googleusercontent.com,
-      GOOGLE_CLIENT_SECRET=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
-
+      GOOGLE_CLIENT_ID=792066325521-dgtt0c4cp36nace09o3fcslflh9m4s4h.apps.googleusercontent.com
 
 # Use the custom service account
 serviceAccount: 'cloudbuild-deploy-account@earn-your-screentime.iam.gserviceaccount.com'
