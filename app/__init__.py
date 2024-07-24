@@ -29,11 +29,19 @@ login_manager = LoginManager()
 def create_app(config_name=None):
     app = Flask(__name__)
 
+    print(f"Initial configuration: {config_name}")
+
     if config_name is None:
         config_name = os.getenv('FLASK_CONFIG', 'default')
 
+
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+
+    # Print the current configuration
+    print(f"Used configuration: {config_name}")
+
+    app.logger.info(f"Application started with configuration: {config_name}")
 
     db.init_app(app)
     migrate.init_app(app, db)

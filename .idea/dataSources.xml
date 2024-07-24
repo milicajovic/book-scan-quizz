@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="postgres@google-cloud" uuid="829859ef-47c8-48c3-85c3-cf99b147c320">
+    <data-source source="LOCAL" name="test-db-cloud@google" uuid="6c60ce94-0b3e-4189-b738-d40d7dfa01f0">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://35.188.75.187:5432/postgres</jdbc-url>
+      <jdbc-url>jdbc:postgresql://35.188.75.187:5432/test-db-cloud</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

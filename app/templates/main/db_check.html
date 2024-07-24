@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Database Check - Book-Scan-Quizz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5 mb-4">Database Connection Check</h1>
+    
+    {% if connected %}
+        <div class="alert alert-success" role="alert">
+            Successfully connected to the database!
+        </div>
+        <ul class="list-group">
+            <li class="list-group-item"><strong>Database Type:</strong> {{ db_type }}</li>
+            <li class="list-group-item"><strong>Database URL:</strong> {{ db_url }}</li>
+            <li class="list-group-item"><strong>Connection Latency:</strong> {{ connect_latency }} ms</li>
+            <li class="list-group-item"><strong>Table Fetch Latency:</strong> {{ fetch_latency }} ms</li>
+            <li class="list-group-item">
+                <strong>Tables:</strong>
+                <ul>
+                    {% for table in tables %}
+                        <li>{{ table }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            Failed to connect to the database.
+        </div>
+        <p><strong>Error:</strong> {{ error }}</p>
+    {% endif %}
+</div>
+{% endblock %}
