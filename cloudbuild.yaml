@@ -21,6 +21,7 @@ steps:
     - '--update-env-vars'
     - |
       FLASK_CONFIG=testing,
+      DUMMY=dummy
 # Use the custom service account
 serviceAccount: 'cloudbuild-deploy-account@earn-your-screentime.iam.gserviceaccount.com'
 options:
