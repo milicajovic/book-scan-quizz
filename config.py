@@ -10,7 +10,7 @@ def get_required_env_var(var_name):
         raise ValueError(f"Missing required environment variable: {var_name}")
     return value
 class Config:
-    #SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     GOOGLE_CLIENT_ID = get_required_env_var('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = get_required_env_var('GOOGLE_CLIENT_SECRET')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
