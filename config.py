@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+def get_required_env_var(var_name):
+    value = os.environ.get(var_name)
+    if not value:
+        raise ValueError(f"Missing required environment variable: {var_name}")
+    return value
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
@@ -26,12 +31,12 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///:memory:'
+    SQLALCHEMY_DATABASE_URI = get_required_env_var('DB_URL')
     SQLALCHEMY_ECHO = True  # Enable SQL query logging for testing
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = get_required_env_var('DB_URL')
 
     @classmethod
     def init_app(cls, app):
