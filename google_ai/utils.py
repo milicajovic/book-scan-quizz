@@ -50,4 +50,5 @@ def execute_genai_operation(
 
     except Exception as e:
         current_app.logger.error(f"Error in execute_genai_operation: {str(e)}")
-        return None
+        raise
+        #return None
