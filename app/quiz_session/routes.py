@@ -68,6 +68,12 @@ def answer_question(session_id):
                            progress_percentage=progress_percentage,
                            answered_count=answered_count,
                            total_count=total_count)
+
+@quiz_session.route('/speech-to-text')
+@login_required
+def speech_to_text():
+    return render_template('quiz_session/speech_to_text.html')
+
 @quiz_session.route('/complete/<session_id>')
 @login_required
 def complete(session_id):
