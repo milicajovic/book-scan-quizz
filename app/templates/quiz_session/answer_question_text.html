@@ -27,8 +27,11 @@
 {% endblock %}
 
 {% block mode_specific_js %}
-<script src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
-<script>
+<script type="module" src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
+<script type="module">
+    const QUESTION_ID = "{{ question.id }}";
+    const SESSION_ID = "{{ session_id }}";
+
     document.addEventListener('DOMContentLoaded', function () {
         initSpeechRecognition('{{ url_for("quiz_session.evaluate_text") }}', QUESTION_ID, SESSION_ID);
     });

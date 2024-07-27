@@ -1,3 +1,5 @@
+import QuizSessionTTS from './quiz_session_tts.js';
+
 // quiz_session.js
 document.addEventListener('DOMContentLoaded', async function() {
     const retryButton = document.getElementById('retryButton');

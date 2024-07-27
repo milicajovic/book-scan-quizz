@@ -1,4 +1,6 @@
 // text_to_speech.js
+import LanguageUtils from "./language_utils.js";
+
 const TextToSpeech = (function () {
     let speechSynthesis;
     let speechUtterance;
@@ -54,6 +56,14 @@ const TextToSpeech = (function () {
                 setVoice(selectedVoiceURI);
                 saveSelectedVoice(selectedVoiceURI);
                 console.log('Voice changed to:', selectedVoiceURI);
+
+                // Store the language code of the selected voice
+                const selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+                if (selectedVoice) {
+                    const languageCode = selectedVoice.lang.split('-')[0]; // Get the primary language code
+                    LanguageUtils.setSelectedLanguage(languageCode);
+                    console.log('Language code stored:', languageCode);
+                }
 
                 // Trigger re-reading of the question
                 if (typeof QuizSessionTTS !== 'undefined' && typeof QuizSessionTTS.readCurrentQuestion === 'function') {
@@ -235,7 +245,7 @@ const TextToSpeech = (function () {
         speakWithoutBuffering: speakWithoutBuffering,
         stopSpeaking: stopSpeaking,
         setVoice: setVoice,
-        isInitialized: () => isInitialized
+        isInitialized: () => isInitialized,
     };
 })();
 
@@ -254,3 +264,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 });
+
+export default TextToSpeech;

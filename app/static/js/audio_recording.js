@@ -191,3 +191,6 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         readChunk();
     }
 }
+
+// Make sure the function is globally accessible
+window.initAudioRecording = initAudioRecording;

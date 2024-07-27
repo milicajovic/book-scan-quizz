@@ -1,4 +1,6 @@
 // speech_to_text.js
+import LanguageUtils from './language_utils.js';
+import TextToSpeech from './text_to_speech.js';
 
 function initSpeechRecognition(submitUrl, questionId, sessionId) {
     const resultElement = document.getElementById('resultText');
@@ -9,7 +11,9 @@ function initSpeechRecognition(submitUrl, questionId, sessionId) {
     const actionButtons = document.getElementById('actionButtons');
 
     let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-US';
+
+    // Use LanguageUtils to get the preferred language
+    recognition.lang = LanguageUtils.getPreferredLanguage();
     recognition.interimResults = true;
     recognition.continuous = true;
 
@@ -39,6 +43,9 @@ function initSpeechRecognition(submitUrl, questionId, sessionId) {
 
     function startRecording() {
         finalTranscript = '';
+        // Update the language just before starting recognition
+        recognition.lang = LanguageUtils.getPreferredLanguage();
+        console.log('recognizing in '+ recognition.lang);
         recognition.start();
         recordButton.textContent = 'Release to Stop';
         resultElement.textContent = '';

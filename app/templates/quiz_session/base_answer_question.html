@@ -108,11 +108,18 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/mode_switcher.js') }}"></script>
-    <script>
+    <script type="module" src="{{ url_for('static', filename='js/language_utils.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/mode_switcher.js') }}"></script>
+
+    <script type="module">
+
+        import TextToSpeech from '/static/js/text_to_speech.js';
+        import QuizSessionTTS from '/static/js/quiz_session_tts.js';
+
         const QUESTION_ID = "{{ question.id }}";
         const SESSION_ID = "{{ session_id }}";
 
@@ -120,7 +127,7 @@
             TextToSpeech.init();
             QuizSessionTTS.init();
             window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
-            initModeSwitcher();
+            //initModeSwitcher();
         });
     </script>
     {% block mode_specific_js %}{% endblock %}

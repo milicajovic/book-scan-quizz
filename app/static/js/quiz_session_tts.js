@@ -1,3 +1,5 @@
+import TextToSpeech from './text_to_speech.js';
+
 const QuizSessionTTS = (function () {
     async function initQuizSessionTTS() {
         console.log('Initializing QuizSessionTTS');
@@ -71,3 +73,5 @@ const QuizSessionTTS = (function () {
         readCurrentQuestion: readCurrentQuestion
     };
 })();
+
+export default QuizSessionTTS;
