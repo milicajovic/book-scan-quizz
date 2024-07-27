@@ -43,6 +43,12 @@
 
     <p id="question-text" class="lead mb-4">{{ question.question_text }}</p>
 
+    <!-- Mode Toggle Switch -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="mode-toggle" checked>
+        <label class="form-check-label" for="mode-toggle">Switch to Audio Mode</label>
+    </div>
+
     <div id="tts-controls" class="mb-4">
         <button class="btn btn-secondary mb-2 d-flex align-items-center justify-content-between w-100" type="button"
                 data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false"
@@ -105,6 +111,7 @@
 <script src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
 <script src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
+<script src="{{ url_for('static', filename='js/mode_switcher.js') }}"></script>
 <script>
     // Pass the values directly to JavaScript
     const QUESTION_ID = "{{ question.id }}";
@@ -122,6 +129,9 @@
 
         // Set up the next question URL for the quiz_session.js
         window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
+
+        // Initialize mode switcher
+        initModeSwitcher();
     });
 </script>
 </body>

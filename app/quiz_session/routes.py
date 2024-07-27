@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from flask import current_app, jsonify, Response, stream_with_context
+from flask import current_app, jsonify, Response, stream_with_context, session
 from flask import make_response
 from flask import render_template, redirect, url_for
 from flask import request
@@ -39,6 +39,16 @@ def start(quiz_id):
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
 
+@quiz_session.route('/update-mode', methods=['POST'])
+@login_required
+def update_mode():
+    data = request.get_json()
+    mode = data.get('mode')
+    if mode in ['audio', 'text']:
+        session['answer_mode'] = mode
+        return jsonify({'status': 'success', 'mode': mode}), 200
+    return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
+
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
@@ -50,7 +60,6 @@ def answer_question(session_id):
     total_count = prep_session.get_total_quiz_questions_count()
 
     if total_count == 0:
-        current_app.logger.error(f"Quiz {prep_session.quiz_id} has no questions")
         raise NotFound("This quiz has no questions. Please contact the administrator.")
 
     if answered_count >= total_count:
@@ -58,17 +67,23 @@ def answer_question(session_id):
 
     current_question = prep_session.get_current_question()
     if not current_question:
-        current_app.logger.error(f"No question found for session {session_id} when one was expected")
         raise NotFound("No question found when one was expected. The quiz may be in an inconsistent state.")
 
     progress_percentage = (answered_count / total_count) * 100
 
-    return render_template('quiz_session/answer_question.html',
+    # Use the answer_mode from the session, defaulting to 'audio' if not set
+    answer_mode = session.get('answer_mode', 'audio')
+
+    # Choose the template based on the answer_mode
+    template = 'quiz_session/answer_question_audio.html' if answer_mode == 'audio' else 'quiz_session/answer_question_text.html'
+
+    return render_template(template,
                            question=current_question,
                            session_id=session_id,
                            progress_percentage=progress_percentage,
                            answered_count=answered_count,
-                           total_count=total_count)
+                           total_count=total_count,
+                           answer_mode=answer_mode)
 
 @quiz_session.route('/speech-to-text')
 @login_required
@@ -269,36 +284,7 @@ def evaluate_audio():
 
 
 
-@quiz_session.route('/answer-question-text/<session_id>', methods=['GET', 'POST'])
-@login_required
-def answer_question_text(session_id):
-    prep_session = PrepSession.query.get_or_404(session_id)
-    if prep_session.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
 
-    answered_count = prep_session.get_distinct_answered_questions_count()
-    total_count = prep_session.get_total_quiz_questions_count()
-
-    if total_count == 0:
-        current_app.logger.error(f"Quiz {prep_session.quiz_id} has no questions")
-        raise NotFound("This quiz has no questions. Please contact the administrator.")
-
-    if answered_count >= total_count:
-        return redirect(url_for('quiz_session.complete', session_id=session_id))
-
-    current_question = prep_session.get_current_question()
-    if not current_question:
-        current_app.logger.error(f"No question found for session {session_id} when one was expected")
-        raise NotFound("No question found when one was expected. The quiz may be in an inconsistent state.")
-
-    progress_percentage = (answered_count / total_count) * 100
-
-    return render_template('quiz_session/answer_question_text.html',
-                           question=current_question,
-                           session_id=session_id,
-                           progress_percentage=progress_percentage,
-                           answered_count=answered_count,
-                           total_count=total_count)
 @quiz_session.route('/evaluate_text', methods=['POST'])
 @login_required
 def evaluate_text():
