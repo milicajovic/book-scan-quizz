@@ -1,77 +1,106 @@
 // speech_to_text.js
 
-document.addEventListener('DOMContentLoaded', function () {
-    const resultElement = document.getElementById('result');
+function initSpeechRecognition(submitUrl, questionId, sessionId) {
+    const resultElement = document.getElementById('resultText');
     const recordButton = document.getElementById('recordButton');
-    const buttonText = document.getElementById('buttonText');
-    const animatedSvg = recordButton.querySelector('svg');
+    const feedbackContainer = document.getElementById('feedbackContainer');
+    const feedbackText = document.getElementById('feedbackText');
+    const processingFeedback = document.getElementById('processingFeedback');
+    const actionButtons = document.getElementById('actionButtons');
 
-    let recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = true;
 
-    if (recognition) {
+    let finalTranscript = '';
 
-        recognition = new recognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => {
-            buttonText.textContent = 'Release to Stop';
-            animatedSvg.style.display = 'inline-block';
-            console.log('Recording started');
-        };
-
-        let finalTranscript = '';
-
-
-        recognition.onresult = function (event) {
-            let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                let transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
-                }
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
             }
-            resultElement.innerHTML = finalTranscript + '<i style="color: #999;">' + interimTranscript + '</i>';
-        };
-        recognition.onerror = function (event) {
-            console.error('Speech recognition error:', event.error);
-            stopRecording();
-        };
+        }
+        resultElement.innerHTML = finalTranscript + '<i style="color: #999;">' + interimTranscript + '</i>';
+    };
 
-        recognition.onend = function () {
-            stopRecording();
-        };
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        stopRecording();
+    };
 
-        recordButton.addEventListener('mousedown', startRecording);
-        recordButton.addEventListener('mouseup', stopRecording);
-        recordButton.addEventListener('mouseleave', stopRecording);
+    recognition.onend = () => {
+        stopRecording();
+    };
 
-        // Touch events for mobile devices
-        recordButton.addEventListener('touchstart', function (e) {
-            e.preventDefault(); // Prevent mousedown event on some browsers
-            startRecording();
-        });
-        recordButton.addEventListener('touchend', stopRecording);
-    } else {
-        console.error('Speech recognition not supported');
-        recordButton.disabled = true;
-        resultElement.innerText = 'Speech recognition is not supported in this browser.';
-    }
-
-     function startRecording() {
-        // Don't reset finalTranscript here
+    function startRecording() {
+        finalTranscript = '';
         recognition.start();
+        recordButton.textContent = 'Release to Stop';
+        resultElement.textContent = '';
+        feedbackContainer.style.display = 'none';
     }
 
     function stopRecording() {
-        if (recognition) {
-            recognition.stop();
-            buttonText.textContent = 'Push to Answer';
-            animatedSvg.style.display = 'none';
-            console.log('Recording stopped');
+        recognition.stop();
+        recordButton.textContent = 'Push to Answer';
+        if (finalTranscript.trim()) {
+            sendTranscriptToServer(finalTranscript.trim());
         }
     }
-});
+
+    function sendTranscriptToServer(transcript) {
+        processingFeedback.style.display = 'block';
+        recordButton.disabled = true;
+
+        const formData = new FormData();
+        formData.append('text', transcript);
+        formData.append('question_id', questionId);
+        formData.append('session_id', sessionId);
+
+        fetch(submitUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            processingFeedback.style.display = 'none';
+            feedbackContainer.style.display = 'block';
+            feedbackText.textContent = result;
+            actionButtons.classList.remove('d-none');
+
+            // If auto-read is enabled, read the feedback
+            const autoReadCheckbox = document.getElementById('autoReadResults');
+            if (autoReadCheckbox && autoReadCheckbox.checked) {
+                TextToSpeech.speakWithoutBuffering(result);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            processingFeedback.style.display = 'none';
+            feedbackContainer.style.display = 'block';
+            feedbackText.textContent = 'Error: ' + error.message;
+        })
+        .finally(() => {
+            recordButton.disabled = false;
+        });
+    }
+
+    recordButton.addEventListener('mousedown', startRecording);
+    recordButton.addEventListener('mouseup', stopRecording);
+    recordButton.addEventListener('mouseleave', stopRecording);
+
+    // Touch events for mobile devices
+    recordButton.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevent mousedown event on some browsers
+        startRecording();
+    });
+    recordButton.addEventListener('touchend', stopRecording);
+}
+
+// Make sure the function is globally accessible
+window.initSpeechRecognition = initSpeechRecognition;

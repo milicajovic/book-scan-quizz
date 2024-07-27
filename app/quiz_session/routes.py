@@ -12,7 +12,8 @@ from flask_login import login_required
 from werkzeug.exceptions import NotFound
 from werkzeug.utils import secure_filename
 
-from google_ai.audio_answer_evaluator import evaluate_audio_answer
+from google_ai import evaluate_text_answer, evaluate_audio_answer
+
 from . import quiz_session
 from .. import db
 from ..models import Question, PrepSession, Answer
@@ -267,12 +268,87 @@ def evaluate_audio():
     #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
 
-def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedback, correctness, completeness):
+
+@quiz_session.route('/answer-question-text/<session_id>', methods=['GET', 'POST'])
+@login_required
+def answer_question_text(session_id):
+    prep_session = PrepSession.query.get_or_404(session_id)
+    if prep_session.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    answered_count = prep_session.get_distinct_answered_questions_count()
+    total_count = prep_session.get_total_quiz_questions_count()
+
+    if total_count == 0:
+        current_app.logger.error(f"Quiz {prep_session.quiz_id} has no questions")
+        raise NotFound("This quiz has no questions. Please contact the administrator.")
+
+    if answered_count >= total_count:
+        return redirect(url_for('quiz_session.complete', session_id=session_id))
+
+    current_question = prep_session.get_current_question()
+    if not current_question:
+        current_app.logger.error(f"No question found for session {session_id} when one was expected")
+        raise NotFound("No question found when one was expected. The quiz may be in an inconsistent state.")
+
+    progress_percentage = (answered_count / total_count) * 100
+
+    return render_template('quiz_session/answer_question_text.html',
+                           question=current_question,
+                           session_id=session_id,
+                           progress_percentage=progress_percentage,
+                           answered_count=answered_count,
+                           total_count=total_count)
+@quiz_session.route('/evaluate_text', methods=['POST'])
+@login_required
+def evaluate_text():
+    try:
+        text = request.form.get('text')
+        question_id = request.form.get('question_id')
+        session_id = request.form.get('session_id')
+
+        if not text or not question_id or not session_id:
+            return jsonify({'error': 'Missing required data'}), 400
+
+        question = Question.query.get(question_id)
+        if not question:
+            return jsonify({'error': 'Question not found'}), 404
+
+        prep_session = PrepSession.query.get(session_id)
+        if not prep_session or prep_session.user_id != current_user.id:
+            return jsonify({'error': 'Invalid session'}), 403
+
+        evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
+
+        # Extract feedback and scores
+        feedback, correctness, completeness = extract_feedback_and_scores(evaluation_result)
+
+        # Store the answer using the existing store_answer function
+        store_answer(
+            user_id=current_user.id,
+            question_id=question_id,
+            prep_session_id=session_id,
+            audio_file_name="not-used",
+            feedback=feedback,
+            correctness=correctness,
+            completeness=completeness,
+            answer_text=text  # Add this new parameter
+        )
+
+        return evaluation_result
+
+    except Exception as e:
+        current_app.logger.error(f"Error in evaluate_text: {str(e)}")
+        return jsonify({'error': f'An error occurred while evaluating the answer {str(e)}'}), 500
+
+
+def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedback, correctness,
+                 completeness, answer_text="not-transcribed"):
     answer = Answer(
         user_id=user_id,
         question_id=question_id,
         prep_session_id=prep_session_id,
-        answer_text="parsing audio directly, missing this info",
+        answer_text=answer_text,
         audio_file_name=audio_file_name,
         feedback=feedback,
         correctness=correctness,
