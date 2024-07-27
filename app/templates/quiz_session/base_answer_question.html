@@ -24,6 +24,14 @@
             height: 20px;
             margin-bottom: 20px;
         }
+
+        /* Add your audioMeter styles here */
+        #audioMeter {
+            height: 20px; /* Adjust height as needed */
+            background-color: green; /* Adjust color as needed */
+            width: 0%; /* Will be updated by JavaScript */
+            transition: width 0.1s; /* Smooth transition */
+        }
     </style>
     {% block mode_specific_css %}{% endblock %}
 {% endblock %}

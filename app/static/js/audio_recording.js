@@ -105,6 +105,7 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             analyser.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b) / bufferLength;
             const volume = Math.min(100, Math.max(0, average));
+            //console.log(`Volume: ${volume}`); // Debugging line
             audioMeter.style.width = volume + '%';
         }, 100);
     }
