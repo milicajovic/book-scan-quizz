@@ -1,4 +1,4 @@
-// audio_recording.js
+import TextToSpeech from "./text_to_speech.js";
 
 let mediaRecorder;
 let audioChunks = [];
@@ -17,56 +17,58 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     let durationInterval;
     let visualizationInterval;
 
-    recordButton.addEventListener('mousedown', startRecording);
-    recordButton.addEventListener('mouseup', stopRecording);
-    recordButton.addEventListener('mouseleave', stopRecording);
+    recordButton.addEventListener('mousedown', () => handleRecording('start'));
+    recordButton.addEventListener('mouseup', () => handleRecording('stop'));
+    recordButton.addEventListener('mouseleave', () => handleRecording('stop'));
 
-    function startRecording() {
-        console.log("Start recording called");
-        if (isRecording) {
-            console.log("Already recording, ignoring start request");
-            return;
+    function handleRecording(action) {
+        if (action === 'start') {
+            if (isRecording) return;
+            isRecording = true;
+            audioChunks = [];
+            startRecordingStream();
+        } else if (action === 'stop') {
+            if (!isRecording) return;
+            isRecording = false;
+            stopMediaRecorder();
+            updateUI(false);
         }
-        isRecording = true;
-        audioChunks = [];
-        navigator.mediaDevices.getUserMedia({audio: true})
-            .then(stream => {
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
-                startTime = Date.now();
-                updateUI(true);
-                startVisualization(stream);
-
-                mediaRecorder.addEventListener("dataavailable", event => {
-                    audioChunks.push(event.data);
-                });
-
-                mediaRecorder.addEventListener("stop", () => {
-                    console.log("MediaRecorder stopped");
-                    const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
-                    console.log(`Audio blob created, size: ${audioBlob.size} bytes`);
-                    sendAudioToServer(audioBlob);
-                    stopVisualization();
-                });
-            })
-            .catch(error => {
-                console.error("Error accessing microphone:", error);
-                isRecording = false;
-                alert('Error accessing microphone. Please ensure you have given permission to use the microphone.');
-            });
     }
 
-    function stopRecording() {
-        console.log("Stop recording called");
-        if (!isRecording) {
-            console.log("Not recording, ignoring stop request");
-            return;
-        }
+    function startRecordingStream() {
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(stream => setupMediaRecorder(stream))
+            .catch(error => handleStreamError(error));
+    }
+
+    function setupMediaRecorder(stream) {
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        startTime = Date.now();
+        updateUI(true);
+        startVisualization(stream);
+        
+        mediaRecorder.addEventListener("dataavailable", event => {
+            audioChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+            const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
+            sendAudioToServer(audioBlob);
+            stopVisualization();
+        });
+    }
+
+    function handleStreamError(error) {
+        console.error("Error accessing microphone:", error);
         isRecording = false;
+        alert('Error accessing microphone. Please ensure you have given permission to use the microphone.');
+    }
+
+    function stopMediaRecorder() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            updateUI(false);
         }
     }
 
@@ -113,14 +115,11 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     }
 
     function sendAudioToServer(audioBlob) {
-        console.log(`Preparing to send audio to server. Blob size: ${audioBlob.size} bytes`);
-
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.wav");
         formData.append("question_id", questionId);
         formData.append("session_id", sessionId);
 
-        console.log("FormData created, sending request to server");
         resultText.textContent = '';
         processingFeedback.style.display = 'block';
         recordButton.disabled = true;
@@ -129,29 +128,20 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
             method: 'POST',
             body: formData
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.body.getReader();
-            })
-            .then(reader => processStreamResponse(reader))
-            .catch(error => {
-                console.error('Error:', error);
-                processingFeedback.style.display = 'none';
-                resultText.textContent = 'Error: ' + error.message;
-                resultText.style.color = 'red';
-                recordButton.disabled = false;
-            });
-    }
-
-    function showNextQuestionButton() {
-        const actionButtons = document.getElementById('actionButtons');
-        if (actionButtons) {
-            actionButtons.classList.remove('d-none'); //if using Bootstrap
-        } else {
-            console.error('Action buttons container not found');
-        }
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.body.getReader();
+        })
+        .then(reader => processStreamResponse(reader))
+        .catch(error => {
+            console.error('Error:', error);
+            processingFeedback.style.display = 'none';
+            resultText.textContent = 'Error: ' + error.message;
+            resultText.style.color = 'red';
+            recordButton.disabled = false;
+        });
     }
 
     function processStreamResponse(reader) {
@@ -161,7 +151,6 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         function readChunk() {
             reader.read().then(({done, value}) => {
                 if (done) {
-                    console.log('Stream complete');
                     processingFeedback.style.display = 'none';
                     recordButton.disabled = false;
                     showNextQuestionButton();
@@ -170,15 +159,9 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
                 }
 
                 const chunk = decoder.decode(value, {stream: true});
-                console.log('Received chunk:', chunk);
-
-                // Update UI
                 resultText.textContent += chunk;
-
-                // Pass chunk to TTS
                 TextToSpeech.addToSpeechQueue(chunk);
 
-                // Continue reading
                 readChunk();
             }).catch(error => {
                 console.error('Error reading stream:', error);
@@ -189,6 +172,15 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         }
 
         readChunk();
+    }
+
+    function showNextQuestionButton() {
+        const actionButtons = document.getElementById('actionButtons');
+        if (actionButtons) {
+            actionButtons.classList.remove('d-none');
+        } else {
+            console.error('Action buttons container not found');
+        }
     }
 }
 
