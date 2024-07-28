@@ -2,7 +2,7 @@ import TextToSpeech from './text_to_speech.js';
 
 class QuizSessionTTS {
     constructor() {
-        this.loggingEnabled = true; // Set this to false to disable logging
+        this.loggingEnabled = false; // Set this to false to disable logging
     }
 
     log(message) {

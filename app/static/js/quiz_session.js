@@ -3,7 +3,7 @@ import TextToSpeech from './text_to_speech.js';
 
 class QuizSession {
     constructor() {
-        this.loggingEnabled = true; // Set this to false to disable logging
+        this.loggingEnabled = false; // Set this to false to disable logging
         this.retryButton = document.getElementById('retryButton');
         this.nextQuestionButton = document.getElementById('nextQuestionButton');
         this.resultText = document.getElementById('resultText');
