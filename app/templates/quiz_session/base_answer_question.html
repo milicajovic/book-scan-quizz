@@ -131,12 +131,19 @@
         const QUESTION_ID = "{{ question.id }}";
         const SESSION_ID = "{{ session_id }}";
 
-        document.addEventListener('DOMContentLoaded', function () {
-            TextToSpeech.init();
-            QuizSessionTTS.init();
-            window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
-            //initModeSwitcher();
-        });
+        TextToSpeech.getInstance().init()
+            .then(() => {
+                console.log('TextToSpeech initialized successfully');
+                QuizSessionTTS.init();
+                window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
+            })
+            .catch((error) => {
+                console.error("Failed to initialize Text-to-Speech:", error);
+                const ttsControls = document.getElementById('tts-controls');
+                if (ttsControls) {
+                    ttsControls.style.display = 'none';
+                }
+            });
     </script>
     {% block mode_specific_js %}{% endblock %}
 {% endblock %}

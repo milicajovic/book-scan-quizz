@@ -1,70 +1,57 @@
 // mode_switcher.js
 
-// Global variable to store the current mode
-let currentMode = 'audio';
+class ModeSwitcher {
+    constructor() {
+        this.currentMode = localStorage.getItem('answerMode') || 'audio';
+        this.modeToggle = document.getElementById('mode-toggle');
+        this.audioElements = document.querySelectorAll('.audio-mode');
+        this.textElements = document.querySelectorAll('.text-mode');
 
-// Function to initialize the mode switcher
-function initModeSwitcher() {
-    const modeToggle = document.getElementById('mode-toggle');
-    if (modeToggle) {
-        modeToggle.addEventListener('change', toggleMode);
+        this.init();
     }
 
-    // Get the initial mode from local storage or default to 'audio'
-    currentMode = localStorage.getItem('answerMode') || 'audio';
-    updateUI(currentMode);
-}
+    init() {
+        if (this.modeToggle) {
+            this.modeToggle.addEventListener('change', this.toggleMode.bind(this));
+        }
+        this.updateUI();
+    }
 
-// Function to toggle between audio and text modes
-function toggleMode() {
-    currentMode = currentMode === 'audio' ? 'text' : 'audio';
+    toggleMode() {
+        this.currentMode = this.currentMode === 'audio' ? 'text' : 'audio';
+        localStorage.setItem('answerMode', this.currentMode);
+        this.updateServerPreference();
+        window.location.reload();
+    }
 
-    // Update local storage
-    localStorage.setItem('answerMode', currentMode);
+    updateUI() {
+        const displayMode = this.currentMode === 'audio' ? 'block' : 'none';
+        const hideMode = this.currentMode === 'audio' ? 'none' : 'block';
 
-    // Update server preference
-    updateServerPreference(currentMode);
+        this.audioElements.forEach(el => el.style.display = displayMode);
+        this.textElements.forEach(el => el.style.display = hideMode);
 
-    // Redirect to the same URL to reload with the new mode
-    window.location.reload();
-}
-// Function to update UI elements based on the current mode
-function updateUI(mode) {
-    const audioElements = document.querySelectorAll('.audio-mode');
-    const textElements = document.querySelectorAll('.text-mode');
-    const modeToggle = document.getElementById('mode-toggle');
+        if (this.modeToggle) {
+            this.modeToggle.checked = this.currentMode === 'text';
+        }
+    }
 
-    if (mode === 'audio') {
-        audioElements.forEach(el => el.style.display = 'block');
-        textElements.forEach(el => el.style.display = 'none');
-        if (modeToggle) modeToggle.checked = false;
-    } else {
-        audioElements.forEach(el => el.style.display = 'none');
-        textElements.forEach(el => el.style.display = 'block');
-        if (modeToggle) modeToggle.checked = true;
+    updateServerPreference() {
+        fetch('/quiz-session/update-mode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mode: this.currentMode }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Mode updated on server:', data);
+        })
+        .catch(error => {
+            console.error('Error updating mode on server:', error);
+        });
     }
 }
 
-// Function to send AJAX request to update mode preference on the server
-function updateServerPreference(mode) {
-    fetch('/quiz-session/update-mode', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ mode: mode }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Mode updated on server:', data);
-    })
-    .catch((error) => {
-        console.error('Error updating mode on server:', error);
-    });
-}
-
-// Initialize the mode switcher when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', initModeSwitcher);
-
-// Expose the toggleMode function globally so it can be called from HTML
-window.toggleMode = toggleMode;
+export default new ModeSwitcher();

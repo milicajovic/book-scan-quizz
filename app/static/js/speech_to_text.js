@@ -1,119 +1,130 @@
 import LanguageUtils from './language_utils.js';
 import TextToSpeech from './text_to_speech.js';
 
-function initSpeechRecognition(submitUrl, questionId, sessionId) {
-    const resultElement = document.getElementById('resultText');
-    const recordButton = document.getElementById('recordButton');
-    const feedbackContainer = document.getElementById('feedbackContainer');
-    const feedbackText = document.getElementById('feedbackText');
-    const processingFeedback = document.getElementById('processingFeedback');
-    const actionButtons = document.getElementById('actionButtons');
+class SpeechRecognitionHandler {
+    constructor(submitUrl, questionId, sessionId) {
+        this.submitUrl = submitUrl;
+        this.questionId = questionId;
+        this.sessionId = sessionId;
+        this.finalTranscript = '';
+        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        this.resultElement = document.getElementById('resultText');
+        this.recordButton = document.getElementById('recordButton');
+        this.feedbackContainer = document.getElementById('feedbackContainer');
+        this.feedbackText = document.getElementById('feedbackText');
+        this.processingFeedback = document.getElementById('processingFeedback');
+        this.actionButtons = document.getElementById('actionButtons');
+        this.loggingEnabled = true; // Set this to false to disable logging
+        this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
 
-    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        this.setupRecognition();
+        this.addRecordButtonListeners();
+    }
 
-    recognition.lang = LanguageUtils.getPreferredLanguage();
-    recognition.interimResults = true;
-    recognition.continuous = true;
+    log(message) {
+        if (this.loggingEnabled) {
+            console.log(message);
+        }
+    }
 
-    let finalTranscript = '';
+    setupRecognition() {
+        this.recognition.lang = LanguageUtils.getPreferredLanguage();
+        this.recognition.interimResults = true;
+        this.recognition.continuous = true;
 
-    recognition.onresult = handleSpeechRecognitionResult;
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        stopRecording();
-    };
+        this.recognition.onresult = this.handleSpeechRecognitionResult.bind(this);
+        this.recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            this.stopRecording();
+        };
+        this.recognition.onend = this.stopRecording.bind(this);
+    }
 
-    recognition.onend = () => {
-        stopRecording();
-    };
-
-    function handleSpeechRecognitionResult(event) {
+    handleSpeechRecognitionResult(event) {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-                finalTranscript += transcript + ' ';
+                this.finalTranscript += transcript + ' ';
             } else {
                 interimTranscript += transcript;
             }
         }
-        resultElement.innerHTML = finalTranscript + '<i style="color: #999;">' + interimTranscript + '</i>';
+        this.resultElement.innerHTML = `${this.finalTranscript}<i style="color: #999;">${interimTranscript}</i>`;
     }
 
-    function startRecording() {
-        finalTranscript = '';
-        recognition.lang = LanguageUtils.getPreferredLanguage();
-        console.log('recognizing in ' + recognition.lang);
-        recognition.start();
-        recordButton.textContent = 'Release to Stop';
-        resultElement.textContent = '';
-        feedbackContainer.style.display = 'none';
+    startRecording() {
+        this.finalTranscript = '';
+        this.recognition.lang = LanguageUtils.getPreferredLanguage();
+        this.log('Recognizing in ' + this.recognition.lang);
+        this.recognition.start();
+        this.recordButton.textContent = 'Release to Stop';
+        this.resultElement.textContent = '';
+        this.feedbackContainer.style.display = 'none';
     }
 
-    function stopRecording() {
-        recognition.stop();
-        recordButton.textContent = 'Push to Answer';
-        if (finalTranscript.trim()) {
-            sendTranscriptToServer(finalTranscript.trim());
+    stopRecording() {
+        this.recognition.stop();
+        this.recordButton.textContent = 'Push to Answer';
+        if (this.finalTranscript.trim()) {
+            this.sendTranscriptToServer(this.finalTranscript.trim());
         }
     }
 
-    function sendTranscriptToServer(transcript) {
-        processingFeedback.style.display = 'block';
-        recordButton.disabled = true;
+    sendTranscriptToServer(transcript) {
+        this.processingFeedback.style.display = 'block';
+        this.recordButton.disabled = true;
 
         const formData = new FormData();
         formData.append('text', transcript);
-        formData.append('question_id', questionId);
-        formData.append('session_id', sessionId);
+        formData.append('question_id', this.questionId);
+        formData.append('session_id', this.sessionId);
 
-        fetch(submitUrl, {
+        fetch(this.submitUrl, {
             method: 'POST',
             body: formData
         })
-        .then(handleFetchResponse)
-        .catch(handleFetchError)
-        .finally(handleFetchFinally);
+        .then(response => response.text())
+        .then(result => this.handleFetchResponse(result))
+        .catch(error => this.handleFetchError(error))
+        .finally(() => this.handleFetchFinally());
     }
 
-    function handleFetchResponse(response) {
-        return response.text().then(result => {
-            processingFeedback.style.display = 'none';
-            feedbackContainer.style.display = 'block';
-            feedbackText.textContent = result;
-            actionButtons.classList.remove('d-none');
+    handleFetchResponse(result) {
+        this.processingFeedback.style.display = 'none';
+        this.feedbackContainer.style.display = 'block';
+        this.feedbackText.textContent = result;
+        this.actionButtons.classList.remove('d-none');
 
-            const autoReadCheckbox = document.getElementById('autoReadResults');
-            if (autoReadCheckbox && autoReadCheckbox.checked) {
-                TextToSpeech.speakWithoutBuffering(result);
-            }
-        });
+        const autoReadCheckbox = document.getElementById('autoReadResults');
+        if (autoReadCheckbox && autoReadCheckbox.checked) {
+            this.textToSpeechInstance.speakWithoutBuffering(result);
+
+        }
     }
 
-    function handleFetchError(error) {
+    handleFetchError(error) {
         console.error('Error:', error);
-        processingFeedback.style.display = 'none';
-        feedbackContainer.style.display = 'block';
-        feedbackText.textContent = 'Error: ' + error.message;
+        this.processingFeedback.style.display = 'none';
+        this.feedbackContainer.style.display = 'block';
+        this.feedbackText.textContent = 'Error: ' + error.message;
     }
 
-    function handleFetchFinally() {
-        recordButton.disabled = false;
+    handleFetchFinally() {
+        this.recordButton.disabled = false;
     }
 
-    function addRecordButtonListeners(button) {
-        button.addEventListener('mousedown', startRecording);
-        button.addEventListener('mouseup', stopRecording);
-        button.addEventListener('mouseleave', stopRecording);
+    addRecordButtonListeners() {
+        this.recordButton.addEventListener('mousedown', this.startRecording.bind(this));
+        this.recordButton.addEventListener('mouseup', this.stopRecording.bind(this));
+        this.recordButton.addEventListener('mouseleave', this.stopRecording.bind(this));
 
-        button.addEventListener('touchstart', (e) => {
+        this.recordButton.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            startRecording();
+            this.startRecording();
         });
-        button.addEventListener('touchend', stopRecording);
+        this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
     }
-
-    addRecordButtonListeners(recordButton);
 }
 
-window.initSpeechRecognition = initSpeechRecognition;
+window.initSpeechRecognition = (submitUrl, questionId, sessionId) => new SpeechRecognitionHandler(submitUrl, questionId, sessionId);

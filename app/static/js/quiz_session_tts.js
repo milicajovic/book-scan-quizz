@@ -1,73 +1,27 @@
 import TextToSpeech from './text_to_speech.js';
 
-// Common function to read question text aloud
-function readQuestionText() {
-    const questionText = document.getElementById('question-text')?.textContent;
-    console.log('Question text:', questionText);
-    if (questionText && TextToSpeech.isInitialized()) {
-        console.log('Reading question aloud');
-        TextToSpeech.speakWithoutBuffering(questionText);
-    } else {
-        console.error('Unable to read question: TextToSpeech not initialized or question text not found');
+class QuizSessionTTS {
+    constructor() {
+        this.loggingEnabled = true; // Set this to false to disable logging
     }
-}
 
-// Function to initialize TextToSpeech
-async function initializeTextToSpeech() {
-    await TextToSpeech.init();
-    console.log('TextToSpeech initialized in QuizSessionTTS');
-}
-
-// Function to handle the auto-read checkbox state and events
-function handleAutoReadCheckbox(autoReadEnabled) {
-    const autoReadCheckbox = document.getElementById('autoReadResults');
-    console.log('Auto-read checkbox in QuizSessionTTS:', autoReadCheckbox ? 'found' : 'not found');
-    if (autoReadCheckbox) {
-        autoReadCheckbox.checked = autoReadEnabled;
-        console.log('Checkbox state set to:', autoReadEnabled);
-
-        if (autoReadEnabled) {
-            readQuestionText();
+    log(message) {
+        if (this.loggingEnabled) {
+            console.log(message);
         }
-
-        autoReadCheckbox.addEventListener('change', function () {
-            console.log('Checkbox changed in QuizSessionTTS. New state:', this.checked);
-            localStorage.setItem('autoReadResults', this.checked);
-            if (this.checked) {
-                readQuestionText();
-            } else {
-                console.log('Stopping speech');
-                TextToSpeech.stopSpeaking();
-            }
-        });
     }
-}
 
-// Function to check the auto-read state from localStorage
-function checkAutoReadState() {
-    const autoReadEnabled = localStorage.getItem('autoReadResults') === 'true';
-    console.log('Auto-read enabled:', autoReadEnabled);
-    return autoReadEnabled;
-}
-
-// IIFE to create the QuizSessionTTS module
-const QuizSessionTTS = (function () {
-    // Main function to initialize the QuizSessionTTS
-    async function initQuizSessionTTS() {
-        console.log('Initializing QuizSessionTTS');
+    async init() {
+        this.log('Initializing QuizSessionTTS');
         try {
-            // Initialize TextToSpeech
-            await initializeTextToSpeech();
+            const textToSpeechInstance = TextToSpeech.getInstance();
+            await textToSpeechInstance.init();
 
-            // Check the auto-read state
-            const autoReadEnabled = checkAutoReadState();
+            const autoReadEnabled = this.checkAutoReadState();
+            this.handleAutoReadCheckbox(autoReadEnabled);
 
-            // Handle the auto-read checkbox
-            handleAutoReadCheckbox(autoReadEnabled);
-
-            // Expose the readQuestion function for external use
             return {
-                readQuestion: readQuestionText
+                readQuestion: this.readQuestionText.bind(this)
             };
         } catch (error) {
             console.error('Failed to initialize QuizSessionTTS:', error);
@@ -77,11 +31,48 @@ const QuizSessionTTS = (function () {
         }
     }
 
-    // Return the public API of the module
-    return {
-        init: initQuizSessionTTS,
-        readCurrentQuestion: readQuestionText
-    };
-})();
+    readQuestionText() {
+        const questionText = document.getElementById('question-text')?.textContent;
+        this.log(`Question text: ${questionText}`);
+        const textToSpeechInstance = TextToSpeech.getInstance();
+        if (questionText && textToSpeechInstance.isInitialized) {
+            this.log('Reading question aloud');
+            textToSpeechInstance.speakWithoutBuffering(questionText);
+        } else {
+            console.error('Unable to read question: TextToSpeech not initialized or question text not found');
+        }
+    }
 
-export default QuizSessionTTS;
+    handleAutoReadCheckbox(autoReadEnabled) {
+        const autoReadCheckbox = document.getElementById('autoReadResults');
+        this.log(`Auto-read checkbox in QuizSessionTTS: ${autoReadCheckbox ? 'found' : 'not found'}`);
+        if (autoReadCheckbox) {
+            autoReadCheckbox.checked = autoReadEnabled;
+            this.log(`Checkbox state set to: ${autoReadEnabled}`);
+
+            if (autoReadEnabled) {
+                this.readQuestionText();
+            }
+
+            autoReadCheckbox.addEventListener('change', () => {
+                this.log(`Checkbox changed in QuizSessionTTS. New state: ${autoReadCheckbox.checked}`);
+                localStorage.setItem('autoReadResults', autoReadCheckbox.checked);
+                if (autoReadCheckbox.checked) {
+                    this.readQuestionText();
+                } else {
+                    this.log('Stopping speech');
+                    const textToSpeechInstance = TextToSpeech.getInstance();
+                    textToSpeechInstance.stopSpeaking();
+                }
+            });
+        }
+    }
+
+    checkAutoReadState() {
+        const autoReadEnabled = localStorage.getItem('autoReadResults') === 'true';
+        this.log(`Auto-read enabled: ${autoReadEnabled}`);
+        return autoReadEnabled;
+    }
+}
+
+export default new QuizSessionTTS();

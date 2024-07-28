@@ -1,98 +1,120 @@
 import TextToSpeech from "./text_to_speech.js";
 
-let mediaRecorder;
-let audioChunks = [];
-let isRecording = false;
+class AudioRecorder {
+    constructor(submitUrl, questionId, sessionId) {
+        this.submitUrl = submitUrl;
+        this.questionId = questionId;
+        this.sessionId = sessionId;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+        this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
 
-function initAudioRecording(submitUrl, questionId, sessionId) {
-    const recordButton = document.getElementById('recordButton');
-    const recordingFeedback = document.getElementById('recordingFeedback');
-    const recordingDuration = document.getElementById('recordingDuration');
-    const resultText = document.getElementById('resultText');
-    const processingFeedback = document.getElementById('processingFeedback');
-    const audioVisualization = document.getElementById('audioVisualization');
-    const audioMeter = document.getElementById('audioMeter');
+        this.loggingEnabled = true; // Set this to false to disable logging
+        this.initElements();
+        this.addEventListeners();
+    }
 
-    let startTime;
-    let durationInterval;
-    let visualizationInterval;
-
-    recordButton.addEventListener('mousedown', () => handleRecording('start'));
-    recordButton.addEventListener('mouseup', () => handleRecording('stop'));
-    recordButton.addEventListener('mouseleave', () => handleRecording('stop'));
-
-    function handleRecording(action) {
-        if (action === 'start') {
-            if (isRecording) return;
-            isRecording = true;
-            audioChunks = [];
-            startRecordingStream();
-        } else if (action === 'stop') {
-            if (!isRecording) return;
-            isRecording = false;
-            stopMediaRecorder();
-            updateUI(false);
+    log(message) {
+        if (this.loggingEnabled) {
+            console.log(message);
         }
     }
 
-    function startRecordingStream() {
+    initElements() {
+        this.recordButton = document.getElementById('recordButton');
+        this.recordingFeedback = document.getElementById('recordingFeedback');
+        this.recordingDuration = document.getElementById('recordingDuration');
+        this.resultText = document.getElementById('resultText');
+        this.processingFeedback = document.getElementById('processingFeedback');
+        this.audioVisualization = document.getElementById('audioVisualization');
+        this.audioMeter = document.getElementById('audioMeter');
+    }
+
+    addEventListeners() {
+        this.recordButton.addEventListener('mousedown', () => this.handleRecording('start'));
+        this.recordButton.addEventListener('mouseup', () => this.handleRecording('stop'));
+        this.recordButton.addEventListener('mouseleave', () => this.handleRecording('stop'));
+
+        this.recordButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.startRecording();
+        });
+        this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
+    }
+
+    handleRecording(action) {
+        if (action === 'start' && !this.isRecording) {
+            this.startRecordingStream();
+        } else if (action === 'stop' && this.isRecording) {
+            this.stopMediaRecorder();
+            this.updateUI(false);
+        }
+    }
+
+    stopRecording() {
+        this.handleRecording('stop');
+    }
+
+    startRecordingStream() {
         navigator.mediaDevices.getUserMedia({audio: true})
-            .then(stream => setupMediaRecorder(stream))
-            .catch(error => handleStreamError(error));
+            .then(stream => this.setupMediaRecorder(stream))
+            .catch(error => this.handleStreamError(error));
     }
 
-    function setupMediaRecorder(stream) {
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.start();
-        startTime = Date.now();
-        updateUI(true);
-        startVisualization(stream);
-        
-        mediaRecorder.addEventListener("dataavailable", event => {
-            audioChunks.push(event.data);
+    setupMediaRecorder(stream) {
+        this.mediaRecorder = new MediaRecorder(stream);
+        this.mediaRecorder.start();
+        this.isRecording = true;
+        this.audioChunks = [];
+        this.startTime = Date.now();
+        this.updateUI(true);
+        this.startVisualization(stream);
+
+        this.mediaRecorder.addEventListener("dataavailable", event => {
+            this.audioChunks.push(event.data);
         });
 
-        mediaRecorder.addEventListener("stop", () => {
-            const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
-            sendAudioToServer(audioBlob);
-            stopVisualization();
+        this.mediaRecorder.addEventListener("stop", () => {
+            const audioBlob = new Blob(this.audioChunks, {type: 'audio/wav'});
+            this.sendAudioToServer(audioBlob);
+            this.stopVisualization();
         });
     }
 
-    function handleStreamError(error) {
+    handleStreamError(error) {
         console.error("Error accessing microphone:", error);
-        isRecording = false;
+        this.isRecording = false;
         alert('Error accessing microphone. Please ensure you have given permission to use the microphone.');
     }
 
-    function stopMediaRecorder() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    stopMediaRecorder() {
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
     }
 
-    function updateUI(isRecording) {
-        recordButton.classList.toggle('btn-danger', isRecording);
-        recordButton.classList.toggle('btn-success', !isRecording);
-        recordButton.textContent = isRecording ? 'Recording...' : 'Record';
-        recordingFeedback.style.display = isRecording ? 'block' : 'none';
-        audioVisualization.style.display = isRecording ? 'block' : 'none';
-
+    updateUI(isRecording) {
+        this.recordButton.classList.toggle('btn-danger', isRecording);
+        this.recordButton.classList.toggle('btn-success', !isRecording);
+        this.recordButton.textContent = isRecording ? 'Recording...' : 'Record';
+        this.recordingFeedback.style.display = isRecording ? 'block' : 'none';
+        this.audioVisualization.style.display = isRecording ? 'block' : 'none';
         if (isRecording) {
-            durationInterval = setInterval(updateDuration, 1000);
+            this.durationInterval = setInterval(() => this.updateDuration(), 1000);
         } else {
-            clearInterval(durationInterval);
-            recordingDuration.textContent = '0';
+            clearInterval(this.durationInterval);
+            this.recordingDuration.textContent = '0';
         }
     }
 
-    function updateDuration() {
-        const duration = Math.floor((Date.now() - startTime) / 1000);
-        recordingDuration.textContent = duration;
+    updateDuration() {
+        const duration = Math.floor((Date.now() - this.startTime) / 1000);
+        this.recordingDuration.textContent = duration;
     }
 
-    function startVisualization(stream) {
+    startVisualization(stream) {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioContext.createAnalyser();
         const microphone = audioContext.createMediaStreamSource(stream);
@@ -101,81 +123,82 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
-        visualizationInterval = setInterval(() => {
+        this.visualizationInterval = setInterval(() => {
             analyser.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b) / bufferLength;
             const volume = Math.min(100, Math.max(0, average));
-            //console.log(`Volume: ${volume}`); // Debugging line
-            audioMeter.style.width = volume + '%';
+            this.audioMeter.style.width = `${volume}%`;
         }, 100);
     }
 
-    function stopVisualization() {
-        clearInterval(visualizationInterval);
-        audioMeter.style.width = '0%';
+    stopVisualization() {
+        clearInterval(this.visualizationInterval);
+        this.audioMeter.style.width = '0%';
     }
 
-    function sendAudioToServer(audioBlob) {
+    sendAudioToServer(audioBlob) {
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.wav");
-        formData.append("question_id", questionId);
-        formData.append("session_id", sessionId);
+        formData.append("question_id", this.questionId);
+        formData.append("session_id", this.sessionId);
 
-        resultText.textContent = '';
-        processingFeedback.style.display = 'block';
-        recordButton.disabled = true;
+        this.resultText.textContent = '';
+        this.processingFeedback.style.display = 'block';
+        this.recordButton.disabled = true;
 
-        fetch(submitUrl, {
+        fetch(this.submitUrl, {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.body.getReader();
-        })
-        .then(reader => processStreamResponse(reader))
-        .catch(error => {
-            console.error('Error:', error);
-            processingFeedback.style.display = 'none';
-            resultText.textContent = 'Error: ' + error.message;
-            resultText.style.color = 'red';
-            recordButton.disabled = false;
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.body.getReader();
+            })
+            .then(reader => this.processStreamResponse(reader))
+            .catch(error => {
+                console.error('Error:', error);
+                this.processingFeedback.style.display = 'none';
+                this.resultText.textContent = 'Error: ' + error.message;
+                this.resultText.style.color = 'red';
+                this.recordButton.disabled = false;
+            });
     }
 
-    function processStreamResponse(reader) {
-        let accumulatedText = '';
+    processStreamResponse(reader) {
         const decoder = new TextDecoder();
 
-        function readChunk() {
+        const readChunk = () => {
             reader.read().then(({done, value}) => {
                 if (done) {
-                    processingFeedback.style.display = 'none';
-                    recordButton.disabled = false;
-                    showNextQuestionButton();
-                    TextToSpeech.finishSpeaking();
+                    this.processingFeedback.style.display = 'none';
+                    this.recordButton.disabled = false;
+                    this.showNextQuestionButton();
+                    this.textToSpeechInstance.finishSpeaking();
                     return;
                 }
 
-                const chunk = decoder.decode(value, {stream: true});
-                resultText.textContent += chunk;
-                TextToSpeech.addToSpeechQueue(chunk);
+                this.handleStreamChunk(decoder.decode(value, {stream: true}));
 
                 readChunk();
             }).catch(error => {
                 console.error('Error reading stream:', error);
-                processingFeedback.style.display = 'none';
-                resultText.textContent += '\nError reading stream: ' + error.message;
-                recordButton.disabled = false;
+                this.processingFeedback.style.display = 'none';
+                this.resultText.textContent += `\nError reading stream: ${error.message}`;
+                this.recordButton.disabled = false;
             });
-        }
+        };
 
         readChunk();
     }
 
-    function showNextQuestionButton() {
+    handleStreamChunk(chunk) {
+        this.resultText.textContent += chunk;
+        this.textToSpeechInstance.addToSpeechQueue(chunk); // Call on the instance
+    }
+
+    showNextQuestionButton() {
         const actionButtons = document.getElementById('actionButtons');
         if (actionButtons) {
             actionButtons.classList.remove('d-none');
@@ -185,5 +208,4 @@ function initAudioRecording(submitUrl, questionId, sessionId) {
     }
 }
 
-// Make sure the function is globally accessible
-window.initAudioRecording = initAudioRecording;
+export default (submitUrl, questionId, sessionId) => new AudioRecorder(submitUrl, questionId, sessionId);
