@@ -1,8 +1,8 @@
 import html
 import os
-from datetime import datetime
-from typing import Optional
 
+from typing import Optional
+from . import language_practice
 from flask import current_app, jsonify, Response, stream_with_context, session
 from flask import make_response
 from flask import render_template, redirect, url_for
@@ -10,17 +10,18 @@ from flask import request
 from flask_login import current_user
 from flask_login import login_required
 from werkzeug.exceptions import NotFound
-from werkzeug.utils import secure_filename
+
 
 from google_ai import evaluate_text_answer, evaluate_audio_answer
 
-from . import quiz_session
+
 from .. import db
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
+from ..quiz_session.routes import store_answer, extract_feedback_and_scores, validate_input, process_audio_file
 
 
-@quiz_session.route('/start/<quiz_id>')
+@language_practice.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
@@ -39,7 +40,7 @@ def start(quiz_id):
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 
 
-@quiz_session.route('/update-mode', methods=['POST'])
+@language_practice.route('/update-mode', methods=['POST'])
 @login_required
 def update_mode():
     data = request.get_json()
@@ -49,7 +50,7 @@ def update_mode():
         return jsonify({'status': 'success', 'mode': mode}), 200
     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
 
-@quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
+@language_practice.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
     prep_session = PrepSession.query.get_or_404(session_id)
@@ -87,7 +88,7 @@ def answer_question(session_id):
 
 
 
-@quiz_session.route('/complete/<session_id>')
+@language_practice.route('/complete/<session_id>')
 @login_required
 def complete(session_id):
     prep_session = PrepSession.query.get_or_404(session_id)
@@ -116,55 +117,6 @@ def complete(session_id):
                                              total_questions_count=total_questions_count))
     return response
 
-def validate_input(audio_file, question_id, session_id, current_user_id):
-    if not audio_file or not question_id or not session_id:
-        raise RuntimeError("Missing required data: audio file, question ID, or session ID")
-
-    if len(audio_file.read()) == 0:
-        audio_file.seek(0)  # Reset file pointer
-        raise RuntimeError("Audio data is empty")
-
-    audio_file.seek(0)  # Reset file pointer
-
-    question = Question.query.get(question_id)
-    if not question:
-        raise RuntimeError(f"Question not found: {question_id}")
-
-    prep_session = PrepSession.query.get(session_id)
-    if not prep_session:
-        raise RuntimeError(f"Prep session not found: {session_id}")
-
-    if prep_session.user_id != current_user_id:
-        raise RuntimeError("Unauthorized access to prep session")
-
-    return question, prep_session
-
-
-def process_audio_file(audio_data):
-    original_filename = secure_filename(audio_data.filename)
-    # Get the file extension from the original filename
-    _, file_extension = os.path.splitext(original_filename)
-
-    # Create a timestamp with milliseconds
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-
-    # Create a new filename
-    new_filename = f"audio_{timestamp}{file_extension}"
-
-    # Get the UPLOAD_FOLDER from the app config
-    upload_folder = current_app.config['UPLOAD_FOLDER']
-
-    # Ensure the upload folder exists
-    os.makedirs(upload_folder, exist_ok=True)
-
-    # Create the full path for the new file
-    audio_file_path = os.path.join(upload_folder, new_filename)
-
-    # Write the audio data to the file
-    audio_data.save(audio_file_path)
-
-    current_app.logger.info(f"Audio file created: {audio_file_path}")
-    return audio_file_path
 
 
 def generate_evaluation(question, audio_file_path):
@@ -179,50 +131,6 @@ def generate_evaluation(question, audio_file_path):
         error_message = f"Error in generate_evaluation: {str(e)}"
         current_app.logger.error(error_message)
         yield html.escape(error_message)
-
-
-def parse_score(score_str: str) -> Optional[float]:
-    """Parse a score string into a float."""
-    try:
-        return float(score_str)
-    except ValueError:
-        current_app.logger.warning(f"Invalid score: {score_str}")
-        return None
-
-
-def extract_feedback_and_scores(full_response: str) -> tuple[str, float, float]:
-    """
-    Extracts feedback, correctness score, and completeness score from the AI response.
-
-    Args:
-    full_response (str): The complete response string from the AI.
-
-    Returns:
-    tuple: Contains feedback (str), correctness score (float), and completeness score (float).
-    """
-    parts = full_response.split('####')
-
-    if len(parts) < 2:
-        current_app.logger.warning("Response does not contain expected '####' separator")
-        return "", 0.0, 0.0
-
-    feedback = parts[0].strip()
-    scores_part = parts[1].strip()
-
-    correctness = 0.0
-    completeness = 0.0
-
-    for score in scores_part.split():
-        key, _, value = score.lower().partition(':')
-        if key == 'correctness':
-            correctness = parse_score(value) or 0.0
-        elif key == 'completeness':
-            completeness = parse_score(value) or 0.0
-        else:
-            current_app.logger.warning(f"Unknown score type: {key}")
-
-    return feedback, correctness, completeness
-
 
 def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
     full_response = ""
@@ -246,7 +154,7 @@ def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_i
                 current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
 
 
-@quiz_session.route('/evaluate_audio', methods=['POST'])
+@language_practice.route('/evaluate_audio', methods=['POST'])
 @login_required
 def evaluate_audio():
     audio_file_path = None
@@ -282,7 +190,7 @@ def evaluate_audio():
 
 
 
-@quiz_session.route('/evaluate_text', methods=['POST'])
+@language_practice.route('/evaluate_text', methods=['POST'])
 @login_required
 def evaluate_text():
     try:
@@ -325,18 +233,3 @@ def evaluate_text():
         return jsonify({'error': f'An error occurred while evaluating the answer {str(e)}'}), 500
 
 
-def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedback, correctness,
-                 completeness, answer_text="not-transcribed"):
-    answer = Answer(
-        user_id=user_id,
-        question_id=question_id,
-        prep_session_id=prep_session_id,
-        answer_text=answer_text,
-        audio_file_name=audio_file_name,
-        feedback=feedback,
-        correctness=correctness,
-        completeness=completeness
-    )
-    db.session.add(answer)
-    db.session.commit()
-    current_app.logger.info(f"Answer stored in database for user {user_id}, question {question_id}")

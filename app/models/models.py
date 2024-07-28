@@ -1,10 +1,26 @@
 import uuid
+from enum import Enum
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, func, Integer
 from sqlalchemy.orm import relationship
 
 from .. import db
 
+
+
+class QuizType(Enum):
+    LANGUAGE = "language"
+    QUESTIONS = "questions"
+
+from enum import Enum
+import uuid
+from sqlalchemy import Column, String, DateTime, ForeignKey, func, Enum as SQLAlchemyEnum
+from sqlalchemy.orm import relationship
+from .. import db
+
+class QuizType(Enum):
+    LANGUAGE = "language"
+    QUESTIONS = "questions"
 
 class Quiz(db.Model):
     __tablename__ = 'quiz'
@@ -13,12 +29,19 @@ class Quiz(db.Model):
     user_owner_id = Column(String(36), ForeignKey('user.id'))
     title = Column(String(255))
     created_date = Column(DateTime, default=func.now())
+    language = Column(String(50))  # New column for quiz language
+    type = Column(SQLAlchemyEnum(QuizType), default=QuizType.QUESTIONS)  # New column for quiz type
 
     owner = relationship("User", back_populates="quizzes")
     questions = relationship("Question", back_populates="quiz")
     page_scans = relationship("PageScan", back_populates="quiz")
-    prep_sessions = relationship("PrepSession", back_populates="quiz")  # New relationship
+    prep_sessions = relationship("PrepSession", back_populates="quiz")
 
+    def __init__(self, title, user_owner_id, language=None, type=QuizType.QUESTIONS):
+        self.title = title
+        self.user_owner_id = user_owner_id
+        self.language = language
+        self.type = type
 
 class Question(db.Model):
     __tablename__ = 'question'

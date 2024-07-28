@@ -2,9 +2,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, MultipleFileField, SelectField
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileAllowed, FileRequired
+from ..models.models import QuizType
 
 class CreateQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
+    language = StringField('Quiz Language')
+    type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Images', validators=[
         FileRequired(),
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
@@ -13,6 +16,8 @@ class CreateQuizForm(FlaskForm):
 
 class EditQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
+    language = StringField('Quiz Language')
+    type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Additional Images', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
     ])

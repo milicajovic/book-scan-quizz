@@ -76,6 +76,10 @@ def create_app(config_name=None):
     from .quiz_session import quiz_session as quiz_session_blueprint
     app.register_blueprint(quiz_session_blueprint, url_prefix='/quiz-session')
 
+    # Register the new language_practice blueprint
+    from .language_practice import language_practice as language_practice_blueprint
+    app.register_blueprint(language_practice_blueprint, url_prefix='/language-practice')
+
     # Import and register the init-db command
     from .cli import init_db_command
     app.cli.add_command(init_db_command)

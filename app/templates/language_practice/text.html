@@ -1,0 +1,39 @@
+{% extends "language_practice/base_practice_language.html" %}
+
+{% block mode_toggle_label %}Switch to Audio Mode{% endblock %}
+
+{% block mode_specific_content %}
+<p class="mb-4">Press and hold the button to start speech recognition.</p>
+
+<div class="text-center my-4">
+    <button id="recordButton" class="btn btn-lg btn-success rounded-circle" style="width: 100px; height: 100px;">
+        Push to Answer
+    </button>
+</div>
+
+<div id="resultContainer" class="mt-4">
+    <h3>Transcribed Text:</h3>
+    <p id="resultText"></p>
+</div>
+
+<div id="processingFeedback" class="text-center my-2" style="display: none;">
+    Processing your answer...
+</div>
+
+<div id="feedbackContainer" class="mt-4" style="display: none;">
+    <h3>Feedback:</h3>
+    <p id="feedbackText"></p>
+</div>
+{% endblock %}
+
+{% block mode_specific_js %}
+<script type="module" src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
+<script type="module">
+    const QUESTION_ID = "{{ question.id }}";
+    const SESSION_ID = "{{ session_id }}";
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initSpeechRecognition('{{ url_for("quiz_session.evaluate_text") }}', QUESTION_ID, SESSION_ID);
+    });
+</script>
+{% endblock %}
