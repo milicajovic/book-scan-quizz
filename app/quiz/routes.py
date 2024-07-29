@@ -23,7 +23,7 @@ def create():
     form = CreateQuizForm()
     if form.validate_on_submit():
         try:
-            quiz = save_quiz(form.title.data)
+            quiz = save_quiz(form.title.data, form.language.data, form.type.data)
             uploaded_images = process_uploaded_images(form.images.data, quiz.id)
             generate_and_save_questions(uploaded_images, quiz.id)
 
@@ -33,31 +33,82 @@ def create():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating quiz: {str(e)}")
-            flash(f'An error occurred while creating the quiz. : {str(e)}', 'error')
+            flash(f'An error occurred while creating the quiz: {str(e)}', 'error')
 
     return render_template('quiz/create.html', form=form)
 
-def save_quiz(title):
-    """
-    Create and save a new quiz object.
-
-    Args:
-        title (str): The title of the quiz.
-
-    Returns:
-        Quiz: The newly created Quiz object.
-
-    Raises:
-        Exception: If there's an error saving the quiz to the database.
-    """
+def save_quiz(title, language, quiz_type):
     try:
-        quiz = Quiz(title=title, user_owner_id=current_user.id)
+        quiz = Quiz(title=title, language=language, type=quiz_type, user_owner_id=current_user.id)
         db.session.add(quiz)
         db.session.flush()  # To get the quiz id
         return quiz
     except Exception as e:
         current_app.logger.error(f"Error saving quiz: {str(e)}")
         raise
+
+@quiz.route('/<quiz_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    if quiz.user_owner_id != current_user.id:
+        abort(403)
+
+    form = EditQuizForm(obj=quiz)
+    if form.validate_on_submit():
+        quiz.title = form.title.data
+        quiz.language = form.language.data
+        quiz.type = form.type.data
+
+        uploaded_images = []
+        for image in form.images.data:
+            if image:
+                filename = secure_filename(image.filename)
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                image.save(filepath)
+                page_scan = PageScan(quiz_id=quiz.id, file_name=filename)
+                db.session.add(page_scan)
+                uploaded_images.append(filepath)
+
+        db.session.commit()
+
+        # Generate questions for new images
+        if uploaded_images:
+            questions = generate_questions(uploaded_images)
+            for q in questions:
+                question = Question(
+                    quiz_id=quiz.id,
+                    question_text=q['question'],
+                    answer=q['answer'],
+                    difficulty_level=q['difficulty_level']
+                )
+                db.session.add(question)
+            db.session.commit()
+
+        flash('Quiz updated successfully!', 'success')
+        return redirect(url_for('quiz.edit', quiz_id=quiz.id))
+
+    questions = Question.query.filter_by(quiz_id=quiz_id).all()
+    return render_template('quiz/edit.html', form=form, quiz=quiz, questions=questions)
+
+
+@quiz.route('/<quiz_id>/add_empty_question', methods=['POST'])
+@login_required
+def add_empty_question(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    if quiz.user_owner_id != current_user.id:
+        abort(403)
+
+    new_question = Question(
+        quiz_id=quiz.id,
+        question_text="",
+        answer="",
+        difficulty_level="medium"  # Default difficulty
+    )
+    db.session.add(new_question)
+    db.session.commit()
+
+    return jsonify({'success': True, 'question_id': new_question.id})
 
 
 def process_uploaded_images(images, quiz_id):
@@ -119,50 +170,6 @@ def generate_and_save_questions(uploaded_images, quiz_id):
     except Exception as e:
         current_app.logger.error(f"Error generating and saving questions: {str(e)}")
         raise
-
-@quiz.route('/<quiz_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    if quiz.user_owner_id != current_user.id:
-        abort(403)
-
-    form = EditQuizForm(obj=quiz)
-    if form.validate_on_submit():
-        quiz.title = form.title.data
-
-        uploaded_images = []
-        for image in form.images.data:
-            if image:
-                filename = secure_filename(image.filename)
-                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                image.save(filepath)
-                page_scan = PageScan(quiz_id=quiz.id, file_name=filename)
-                db.session.add(page_scan)
-                uploaded_images.append(filepath)
-
-        db.session.commit()
-
-        # Generate questions for new images
-        if uploaded_images:
-            questions = generate_questions(uploaded_images)
-            for q in questions:
-                question = Question(
-                    quiz_id=quiz.id,
-                    question_text=q['question'],
-                    answer=q['answer'],
-                    difficulty_level=q['difficulty_level']
-                )
-                db.session.add(question)
-            db.session.commit()
-
-        flash('Quiz updated successfully!', 'success')
-        return redirect(url_for('quiz.edit', quiz_id=quiz.id))
-
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
-    return render_template('quiz/edit.html', form=form, quiz=quiz, questions=questions)
-
-
 
 
 @quiz.route('/<quiz_id>/delete_question/<question_id>', methods=['POST'])

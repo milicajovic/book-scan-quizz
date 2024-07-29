@@ -3,7 +3,7 @@ import os
 
 from typing import Optional
 from . import language_practice
-from flask import current_app, jsonify, Response, stream_with_context, session
+from flask import current_app, jsonify, Response, stream_with_context, session, abort
 from flask import make_response
 from flask import render_template, redirect, url_for
 from flask import request
@@ -20,7 +20,33 @@ from ..models import Question, PrepSession, Answer
 from ..models import Quiz
 from ..quiz_session.routes import store_answer, extract_feedback_and_scores, validate_input, process_audio_file
 
+@language_practice.route('/practice/')
+@login_required
+def practice():
+    # Query for the user's last language practice session
+    last_session = PrepSession.query.join(Quiz).filter(
+        PrepSession.user_id == current_user.id,
+        Quiz.type == 'language'
+    ).order_by(PrepSession.start_time.desc()).first()
 
+    if not last_session:
+        # If no session exists, throw an exception
+        abort(404, description="No language practice sessions found for this user.")
+
+    if last_session.status == 'in_progress':
+        # If there's an open session, redirect to it
+        return redirect(url_for('quiz_session.answer_question', session_id=last_session.id))
+
+    # If the last session is completed, create a new one
+    language_quiz = Quiz.query.filter_by(type='language').first()
+    if not language_quiz:
+        abort(404, description="No language quizzes available.")
+
+    new_session = PrepSession(user_id=current_user.id, quiz_id=language_quiz.id, status='in_progress')
+    db.session.add(new_session)
+    db.session.commit()
+
+    return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
 @language_practice.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
@@ -32,12 +58,12 @@ def start(quiz_id):
     ).first()
 
     if existing_session:
-        return redirect(url_for('quiz_session.answer_question', session_id=existing_session.id))
+        return redirect(url_for('language_practice.answer_question', session_id=existing_session.id))
 
     new_session = PrepSession(user_id=current_user.id, quiz_id=quiz_id, status='in_progress')
     db.session.add(new_session)
     db.session.commit()
-    return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
+    return redirect(url_for('language_practice.answer_question', session_id=new_session.id))
 
 
 @language_practice.route('/update-mode', methods=['POST'])

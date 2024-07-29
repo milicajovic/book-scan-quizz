@@ -30,7 +30,7 @@ class Quiz(db.Model):
     title = Column(String(255))
     created_date = Column(DateTime, default=func.now())
     language = Column(String(50))  # New column for quiz language
-    type = Column(SQLAlchemyEnum(QuizType), default=QuizType.QUESTIONS)  # New column for quiz type
+    type = Column(String(20), nullable=False, default='QUESTIONS')
 
     owner = relationship("User", back_populates="quizzes")
     questions = relationship("Question", back_populates="quiz")

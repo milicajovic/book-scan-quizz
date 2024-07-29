@@ -9,7 +9,7 @@ class CreateQuizForm(FlaskForm):
     language = StringField('Quiz Language')
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Images', validators=[
-        FileRequired(),
+       # FileRequired(),
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
     ])
     submit = SubmitField('Create Quiz')
@@ -32,3 +32,4 @@ class QuestionForm(FlaskForm):
                                             ('hard', 'Hard')],
                                    validators=[DataRequired()])
     submit = SubmitField('Save Question')
+

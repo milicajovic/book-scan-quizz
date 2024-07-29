@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>{% if quiz %}Edit{% else %}Create{% endif %} Quiz</h1>
+    <h1>Edit Quiz</h1>
     <form method="POST" enctype="multipart/form-data" id="quizForm">
         {{ form.hidden_tag() }}
         <div class="mb-3">
@@ -8,101 +8,70 @@
             {{ form.title(class="form-control") }}
         </div>
         <div class="mb-3">
+            {{ form.language.label(class="form-label") }}
+            {{ form.language(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.type.label(class="form-label") }}
+            {{ form.type(class="form-select") }}
+        </div>
+        <div class="mb-3">
             {{ form.images.label(class="form-label") }}
             {{ form.images(class="form-control", accept="image/*", multiple=true) }}
         </div>
-        <div id="imagePreview" class="mb-3">
-            <!-- Uploaded images will be displayed here -->
-        </div>
-        <button type="submit" class="btn btn-primary" id="submitBtn">{% if quiz %}Update{% else %}Create{% endif %} Quiz</button>
+        {{ form.submit(class="btn btn-primary") }}
     </form>
 
-    <!-- Loading spinner -->
-    <div id="loadingSpinner" class="spinner-overlay d-none">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-
-    {% if questions %}
-        <h2>Questions</h2>
-        {% for question in questions %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Question {{ loop.index }}</h5>
-                    <p class="card-text">{{ question.question_text }}</p>
-                    <p class="card-text"><strong>Answer:</strong> {{ question.answer }}</p>
-                    <p class="card-text"><strong>Difficulty:</strong> {{ question.difficulty_level }}</p>
-                    <a href="{{ url_for('quiz.edit_question', quiz_id=quiz.id, question_id=question.id) }}" class="btn btn-secondary">Edit</a>
-                    <button onclick="deleteQuestion('{{ quiz.id }}', '{{ question.id }}')" class="btn btn-danger">Delete</button>
-                </div>
+    <h2>Questions</h2>
+    <button id="addEmptyQuestion" class="btn btn-secondary mb-3">Add Empty Question</button>
+    {% for question in questions %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Question {{ loop.index }}</h5>
+                <p class="card-text">{{ question.question_text or 'Empty question' }}</p>
+                <p class="card-text"><strong>Answer:</strong> {{ question.answer or 'No answer yet' }}</p>
+                <p class="card-text"><strong>Difficulty:</strong> {{ question.difficulty_level }}</p>
+                <a href="{{ url_for('quiz.edit_question', quiz_id=quiz.id, question_id=question.id) }}"
+                   class="btn btn-secondary">Edit</a>
+                <button onclick="deleteQuestion('{{ quiz.id }}', '{{ question.id }}')" class="btn btn-danger">
+                    Delete
+                </button>
             </div>
-        {% endfor %}
-    {% endif %}
-{% endblock %}
+        </div>
+    {% endfor %}
 
-{% block extra_css %}
-<style>
-    .spinner-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-</style>
+    <p>No questions yet. Click 'Add Empty Question' to get started.</p>
+
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function deleteQuestion(quizId, questionId) {
-    if (confirm('Are you sure you want to delete this question?')) {
-        fetch(`/quiz/${quizId}/delete_question/${questionId}`, {
-            method: 'POST',
-        }).then(response => {
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('Failed to delete question');
-            }
+    <script>
+        document.getElementById('addEmptyQuestion').addEventListener('click', function () {
+            fetch('{{ url_for("quiz.add_empty_question", quiz_id=quiz.id) }}', {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();  // Reload the page to show the new question
+                    } else {
+                        alert('Failed to add empty question');
+                    }
+                });
         });
-    }
-}
 
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('quizForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        loadingSpinner.classList.remove('d-none');
-
-        // Submit the form
-        fetch(form.action, {
-            method: form.method,
-            body: new FormData(form)
-        }).then(response => {
-            if (response.ok) {
-                return response.text();
+        function deleteQuestion(quizId, questionId) {
+            if (confirm('Are you sure you want to delete this question?')) {
+                fetch(`/quiz/${quizId}/delete_question/${questionId}`, {
+                    method: 'POST',
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to delete question');
+                    }
+                });
             }
-            throw new Error('Network response was not ok.');
-        }).then(html => {
-            document.body.innerHTML = html;
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while submitting the form. Please try again.');
-        }).finally(() => {
-            submitBtn.disabled = false;
-            loadingSpinner.classList.add('d-none');
-        });
-    });
-});
-</script>
+        }
+    </script>
 {% endblock %}

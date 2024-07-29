@@ -8,7 +8,11 @@
             {{ quiz.title }}
             <div>
                 <a href="{{ url_for('quiz.edit', quiz_id=quiz.id) }}" class="btn btn-sm btn-secondary">Edit</a>
-                <a href="{{ url_for('quiz_session.start', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">Answer</a>
+                 {% if quiz.type|lower == 'language' %}
+                    <a href="{{ url_for('language_practice.start', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">Answer</a>
+                {% else %}
+                    <a href="{{ url_for('quiz_session.start', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">Answer</a>
+                {% endif %}
             </div>
         </li>
     {% endfor %}
