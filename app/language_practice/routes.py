@@ -146,13 +146,13 @@ def complete(session_id):
     return response
 
 
-def generate_evaluation(question, audio_file_path):
+def generate_evaluation(question, audio_file_path,  user_language="English"):
     if not os.path.exists(audio_file_path):
         yield html.escape(f"Error: Audio file not found: {audio_file_path}")
         return
 
     try:
-        for chunk in evaluate_language_audio("English", "German",
+        for chunk in evaluate_language_audio(user_language, question.quiz.language,
                                              question.question_text,
                                              audio_file_path):
             yield chunk
@@ -162,7 +162,7 @@ def generate_evaluation(question, audio_file_path):
         yield html.escape(error_message)
 
 
-def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
+def generate_audio_evaluation(question, audio_file_path, prep_session):
     full_response = ""
 
     try:
@@ -171,7 +171,7 @@ def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_i
             yield chunk
 
         feedback, correctness, completeness = extract_feedback_and_scores(full_response)
-        store_answer(user_id, question.id, prep_session_id, os.path.basename(audio_file_path),
+        store_answer(prep_session.user_id, question.id, prep_session.id, os.path.basename(audio_file_path),
                      feedback, correctness, completeness)
 
     finally:
@@ -200,8 +200,7 @@ def evaluate_audio():
 
         return Response(
             stream_with_context(generate_audio_evaluation(
-                question, audio_file_path, current_user.id, prep_session.id
-            )),
+                question, audio_file_path, prep_session)),
             content_type='text/plain'
         )
 
@@ -215,7 +214,8 @@ def evaluate_audio():
     #             os.remove(audio_file_path)
     #             current_app.logger.info(f"Audio file deleted in finally block: {audio_file_path}")
     #         except Exception as e:
-    #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
+    #               current_app.logger.warning(
+    #               f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
 
 @language_practice.route('/evaluate_text', methods=['POST'])
