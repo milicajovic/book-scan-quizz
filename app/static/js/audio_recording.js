@@ -11,6 +11,7 @@ class AudioRecorder {
         this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
 
         this.loggingEnabled = true; // Set this to false to disable logging
+        this.isResetting = false;
         this.initElements();
         this.addEventListeners();
     }
@@ -19,6 +20,36 @@ class AudioRecorder {
         if (this.loggingEnabled) {
             console.log(message);
         }
+    }
+
+    reset() {
+        if (this.isResetting) return;
+        this.isResetting = true;
+
+        // Stop any ongoing recording
+        this.stopRecording();
+
+        // Reset state variables
+        this.audioChunks = [];
+        this.isRecording = false;
+
+        // Reset UI elements
+        this.updateUI(false);
+        //this.resultText.textContent = '';
+        this.processingFeedback.style.display = 'none';
+        this.recordButton.disabled = false;
+
+        // Clear visualizations
+        this.stopVisualization();
+
+        // Reset the audio context if it exists
+        if (this.audioContext) {
+            this.audioContext.close().then(() => {
+                this.audioContext = null;
+            });
+        }
+
+        this.isResetting = false;
     }
 
     initElements() {
@@ -163,7 +194,12 @@ class AudioRecorder {
                 this.resultText.textContent = 'Error: ' + error.message;
                 this.resultText.style.color = 'red';
                 this.recordButton.disabled = false;
+            })
+            .finally(() => {
+                // Call reset method after processing is complete
+                setTimeout(() => this.reset(), 1000); // 5-second delay before resetting
             });
+        ;
     }
 
     processStreamResponse(reader) {

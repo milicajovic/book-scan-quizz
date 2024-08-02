@@ -16,7 +16,9 @@ class TestAudioLanguageEvaluator(unittest.TestCase):
         self.app_context.push()
 
         self.question = "Say 'Hello, how are you?' in German"
-        self.audio_path = os.path.join(TEST_AUDIO_DIR, 'german_howareyou.wav')
+        #self.audio_path = os.path.join(TEST_AUDIO_DIR, 'german_howareyou.wav')
+        self.audio_path = os.path.join(TEST_AUDIO_DIR, 'german_wiegehtsdir.wav')
+
         self.empty_audio_file = EMPTY_AUDIO
 
     def tearDown(self):
