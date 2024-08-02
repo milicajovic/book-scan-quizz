@@ -3,10 +3,8 @@
 {% block title %}About - AI Quizzer
 
 {% endblock %}
-
-{% block content %}
-
-     <style>
+{% block extra_css %}
+    <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -41,27 +39,47 @@
         }
     </style>
 
-    <br>
-    <br>
+{% endblock %}
 
-    <p>Welcome to AI-Quizer, an innovative learning application that harnesses the power of Google's Gemini AI to
+{% block content %}
+
+
+    <p>Welcome to AI-Quizzer, an innovative learning application that harnesses the power of Google's Gemini AI to
         transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning
         experience that caters to diverse learning styles and needs.</p>
 
     <h2>Key Features</h2>
 
     <div class="feature">
-        <h3>1. Intelligent Quiz Generation</h3>
+        <h3> Intelligent Quiz Generation</h3>
         <ul>
             <li>Snap photos of book pages and watch as Gemini AI creates relevant, accurate questions based on the
                 content.
             </li>
-            <li>Ensures quiz material is directly aligned with your study material.</li>
+            <li>Ensures quiz material is directly aligned with your study material, no hallucinations guaranteed</li>
         </ul>
     </div>
 
     <div class="feature">
-        <h3>2. Multi-Modal Learning Support</h3>
+        <h3> AI-Powered Feedback</h3>
+        <ul>
+            <li>Gemini AI analyzes your responses, providing detailed, constructive feedback to enhance your
+                understanding.
+            </li>
+            <li>Feedback can be displayed on-screen or read aloud, adapting to your preferences.</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>Conversational Language Learning</h3>
+        <ul>
+            <li>Practice speaking in your target language with AI-generated conversation prompts.</li>
+            <li>Receive instant feedback on grammar, pronunciation, and content relevance.</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3> Multi-Modal Learning Support</h3>
         <ul>
             <li>Text-to-Speech: Questions can be read aloud in multiple languages, supporting auditory learners and
                 improving accessibility.
@@ -72,39 +90,21 @@
     </div>
 
     <div class="feature">
-        <h3>3. AI-Powered Feedback</h3>
+        <h3> Adaptive Technology</h3>
         <ul>
-            <li>Gemini AI analyzes your responses, providing detailed, constructive feedback to enhance your
-                understanding.
-            </li>
-            <li>Feedback can be displayed on-screen or read aloud, adapting to your preferences.</li>
+            <li>Choose between on-device AI for quick, low-bandwidth use or cloud-based AI for enhanced capabilities.</li>
+            <li>Seamlessly switch between text,  and speech inputs to suit your learning environment.</li>
         </ul>
     </div>
 
-    <div class="feature">
-        <h3>4. Conversational Language Learning</h3>
-        <ul>
-            <li>Practice speaking in your target language with AI-generated conversation prompts.</li>
-            <li>Receive instant feedback on grammar, pronunciation, and content relevance.</li>
-        </ul>
-    </div>
-
-    <div class="feature">
-        <h3>5. Adaptive Technology</h3>
-        <ul>
-            <li>Choose between on-device AI for quick, offline use or cloud-based AI for enhanced capabilities.</li>
-            <li>Seamlessly switch between text, audio, and speech inputs to suit your learning environment.</li>
-        </ul>
-    </div>
-
-    <h2>Why AI-Quizer Stands Out</h2>
+    <h2>Why AI-Quizzer Stands Out</h2>
 
     <div class="standout">
-        <p><strong>Remarkability:</strong> AI-Quizer showcases AI in a meaningful and impactful way, delivering a
+        <p><strong>Innovation:</strong> AI-Quizzer showcases AI in a meaningful and impactful way, delivering a
             superior learning experience that adapts to individual needs.</p>
         <p><strong>Creativity:</strong> Our app goes beyond traditional quizzing, offering an interactive, multi-modal
             approach to learning that's both innovative and engaging.</p>
-        <p><strong>Usefulness:</strong> AI-Quizer addresses the needs of students, lifelong learners, and language
+        <p><strong>Usefulness:</strong> AI-Quizzer addresses the needs of students, lifelong learners, and language
             enthusiasts by providing a versatile tool that makes studying more effective and enjoyable.</p>
         <p><strong>Impactfulness:</strong> By improving accessibility and catering to diverse learning styles, AI-Quizer
             has the potential to positively impact education on a global scale.</p>
@@ -114,10 +114,10 @@
 
     <h2>Our Vision</h2>
 
-    <p class="vision">At AI-Quizer, we believe that learning should be accessible, engaging, and tailored to each
+    <p class="vision">At AI-Quizzer, we believe that learning should be accessible, engaging, and tailored to each
         individual. By combining the power of Gemini AI with innovative features, we're not just creating an app – we're
         shaping the future of education.</p>
 
-    <p>Join us in this learning revolution. Download AI-Quizer today and experience the future of studying!</p>
+    <p>Join us in this learning revolution. Download AI-Quizzer today and experience the future of studying!</p>
     </main>
 {% endblock %}

@@ -5,7 +5,7 @@ from google.api_core import exceptions
 from flask import current_app
 from app import create_app
 from google_ai.evaluate_language_audio import evaluate_language_audio
-from tests.test_config import PHOTOSYNTHESIS_AUDIO, EMPTY_AUDIO, TEST_AUDIO_DIR
+from tests.test_config import EMPTY_AUDIO, TEST_AUDIO_DIR
 
 
 class TestAudioLanguageEvaluator(unittest.TestCase):
