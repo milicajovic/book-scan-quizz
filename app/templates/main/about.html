@@ -1,93 +1,118 @@
 {% extends "base.html" %}
 
-{% block title %}About - AI Quizzer{% endblock %}
+{% block title %}About - AI Quizzer
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        .feature {
+            margin-bottom: 20px;
+        }
+
+        .feature h3 {
+            color: #3498db;
+        }
+
+        .standout {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .vision {
+            font-style: italic;
+            color: #2980b9;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1 class="text-center mb-4">About Book-Scan-Quizz</h1>
 
-        <p class="lead">Welcome to Book-Scan-Quizz, the AI-powered app revolutionizing how we learn!</p>
+    <p>Welcome to AI-Quizer, an innovative learning application that harnesses the power of Google's Gemini AI to
+        transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning
+        experience that caters to diverse learning styles and needs.</p>
 
-        <h2>Our Mission</h2>
-        <p>At Book-Scan-Quizz, we're on a mission to make learning more accessible, engaging, and efficient for
-            everyone. Whether you're a student, teacher, lifelong learner, or language enthusiast, our app is
-            designed to enhance your learning experience.</p>
+    <h2>Key Features</h2>
 
-        <h2>Powered by Google Gemini API</h2>
-        <p>Book-Scan-Quizz harnesses the power of Google's Gemini API to deliver a cutting-edge learning experience.
-            This advanced AI technology allows us to offer features that are both innovative and highly
-            effective.</p>
-
-        <h2>Key Features</h2>
-        <div class="features">
-            <div class="feature-item">
-                <h3>1. Instant Quiz Generation</h3>
-                <p>Transform any book into an interactive quiz! Simply snap photos of book pages, and our AI
-                    generates multiple questions based on the content. The best part? Answers are sourced directly
-                    from the book, ensuring accuracy and relevance.</p>
-            </div>
-
-            <div class="feature-item">
-                <h3>2. Multilingual Text-to-Speech</h3>
-                <p>Our on-device AI brings questions to life with natural-sounding speech in multiple languages.
-                    Perfect for auditory learners or anyone who prefers a more natural learning flow.</p>
-            </div>
-
-            <div class="feature-item">
-                <h3>3. Audio Answer Evaluation</h3>
-                <p>Record your answers verbally, and let our Gemini AI analyze them. Receive detailed feedback on
-                    your responses, including completeness and correctness grades.</p>
-            </div>
-
-            <div class="feature-item">
-                <h3>4. On-Device Speech-to-Text</h3>
-                <p>Even with low bandwidth, you can dictate your answers using our on-device speech-to-text feature.
-                    Your spoken words are converted to text in real-time, right on your device, ensuring a smooth
-                    experience regardless of internet connectivity.</p>
-            </div>
-
-            <div class="feature-item">
-                <h3>5. Comprehensive Performance Review</h3>
-                <p>After completing a quiz, review your performance with our easy-to-understand summary. Track your
-                    progress and identify areas for improvement.</p>
-            </div>
-
-            <div class="feature-item">
-                <h3>6. Easy Sharing and Collaboration</h3>
-                <p>Share quizzes or individual questions with friends, classmates, or students. Foster a
-                    collaborative learning environment and challenge each other to grow.</p>
-            </div>
-        </div>
-
-        <h2>Why Choose Book-Scan-Quizz?</h2>
-        <ul class="benefits-list">
-            <li><strong>Accessibility:</strong> Features like text-to-speech and speech-to-text make learning
-                accessible to everyone, including those with visual impairments or reading difficulties.
+    <div class="feature">
+        <h3>1. Intelligent Quiz Generation</h3>
+        <ul>
+            <li>Snap photos of book pages and watch as Gemini AI creates relevant, accurate questions based on the
+                content.
             </li>
-            <li><strong>Efficiency:</strong> Generate quizzes instantly from any book, saving time and effort in
-                creating study materials.
+            <li>Ensures quiz material is directly aligned with your study material.</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>2. Multi-Modal Learning Support</h3>
+        <ul>
+            <li>Text-to-Speech: Questions can be read aloud in multiple languages, supporting auditory learners and
+                improving accessibility.
             </li>
-            <li><strong>Flexibility:</strong> Learn at your own pace, in your preferred language, using either audio
-                or text-based methods.
-            </li>
-            <li><strong>Accuracy:</strong> With questions and answers sourced directly from books, you can trust the
-                content you're learning.
-            </li>
-            <li><strong>Innovation:</strong> Cutting-edge AI technology ensures you're using the most advanced
-                learning tools available.
-            </li>
-            <li><strong>Privacy:</strong> On-device processing for speech features ensures your data stays private.
+            <li>Speech-to-Text: Record your answers or use real-time dictation for a hands-free learning experience.
             </li>
         </ul>
-
-        <h2>Join the Learning Revolution</h2>
-        <p>Experience the future of education with Book-Scan-Quizz. Download our app today and revolutionize your
-            learning journey!</p>
-
-
-        <p class="text-center mt-4"><em>Book-Scan-Quizz: Empowering learners with AI-driven, interactive
-            studying.</em></p>
     </div>
-    
 
+    <div class="feature">
+        <h3>3. AI-Powered Feedback</h3>
+        <ul>
+            <li>Gemini AI analyzes your responses, providing detailed, constructive feedback to enhance your
+                understanding.
+            </li>
+            <li>Feedback can be displayed on-screen or read aloud, adapting to your preferences.</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>4. Conversational Language Learning</h3>
+        <ul>
+            <li>Practice speaking in your target language with AI-generated conversation prompts.</li>
+            <li>Receive instant feedback on grammar, pronunciation, and content relevance.</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>5. Adaptive Technology</h3>
+        <ul>
+            <li>Choose between on-device AI for quick, offline use or cloud-based AI for enhanced capabilities.</li>
+            <li>Seamlessly switch between text, audio, and speech inputs to suit your learning environment.</li>
+        </ul>
+    </div>
+
+    <h2>Why AI-Quizer Stands Out</h2>
+
+    <div class="standout">
+        <p><strong>Remarkability:</strong> AI-Quizer showcases AI in a meaningful and impactful way, delivering a
+            superior learning experience that adapts to individual needs.</p>
+        <p><strong>Creativity:</strong> Our app goes beyond traditional quizzing, offering an interactive, multi-modal
+            approach to learning that's both innovative and engaging.</p>
+        <p><strong>Usefulness:</strong> AI-Quizer addresses the needs of students, lifelong learners, and language
+            enthusiasts by providing a versatile tool that makes studying more effective and enjoyable.</p>
+        <p><strong>Impactfulness:</strong> By improving accessibility and catering to diverse learning styles, AI-Quizer
+            has the potential to positively impact education on a global scale.</p>
+        <p><strong>Execution:</strong> Built with meticulous attention to detail, AI-Quizer leverages the Gemini API
+            alongside other Google developer tools to ensure a seamless, high-quality user experience.</p>
+    </div>
+
+    <h2>Our Vision</h2>
+
+    <p class="vision">At AI-Quizer, we believe that learning should be accessible, engaging, and tailored to each
+        individual. By combining the power of Gemini AI with innovative features, we're not just creating an app – we're
+        shaping the future of education.</p>
+
+    <p>Join us in this learning revolution. Download AI-Quizer today and experience the future of studying!</p>
+    </main>
 {% endblock %}

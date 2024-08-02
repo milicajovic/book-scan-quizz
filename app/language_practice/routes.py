@@ -1,10 +1,6 @@
 import html
 import os
 
-from typing import Optional
-
-from google_ai.evaluate_language_audio import evaluate_language_audio
-from . import language_practice
 from flask import current_app, jsonify, Response, stream_with_context, session, abort
 from flask import make_response
 from flask import render_template, redirect, url_for
@@ -13,14 +9,16 @@ from flask_login import current_user
 from flask_login import login_required
 from werkzeug.exceptions import NotFound
 
-
-#from google_ai import evaluate_text_answer, evaluate_audio_answer
-
-
+from google_ai.evaluate_language_audio import evaluate_language_audio
+from . import language_practice
 from .. import db
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
 from ..quiz_session.routes import store_answer, extract_feedback_and_scores, validate_input, process_audio_file
+
+
+# from google_ai import evaluate_text_answer, evaluate_audio_answer
+
 
 @language_practice.route('/practice/')
 @login_required
@@ -49,6 +47,8 @@ def practice():
     db.session.commit()
 
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
+
+
 @language_practice.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
@@ -78,6 +78,7 @@ def update_mode():
         return jsonify({'status': 'success', 'mode': mode}), 200
     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
 
+
 @language_practice.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
 def answer_question(session_id):
@@ -104,7 +105,7 @@ def answer_question(session_id):
     answer_mode = session.get('answer_mode', 'audio')
 
     # Choose the template based on the answer_mode
-    template = 'quiz_session/answer_question_audio.html' if answer_mode == 'audio' else 'quiz_session/answer_question_text.html'
+    template = 'language_practice/audio.html' if answer_mode == 'audio' else 'language_practice/text.html'
 
     return render_template(template,
                            question=current_question,
@@ -113,7 +114,6 @@ def answer_question(session_id):
                            answered_count=answered_count,
                            total_count=total_count,
                            answer_mode=answer_mode)
-
 
 
 @language_practice.route('/complete/<session_id>')
@@ -133,18 +133,17 @@ def complete(session_id):
         db.session.commit()
 
     # Fetch all answers with their related questions, ordered by question position
-    answers = Answer.query.join(Question)\
-        .filter(Answer.prep_session_id == prep_session.id)\
-        .order_by(Question.position, Answer.id)\
+    answers = Answer.query.join(Question) \
+        .filter(Answer.prep_session_id == prep_session.id) \
+        .order_by(Question.position, Answer.id) \
         .all()
 
-    response = make_response(render_template('quiz_session/complete.html',
+    response = make_response(render_template('language_practice/complete.html',
                                              session=prep_session,
                                              answers=answers,
                                              answered_questions_count=answered_questions_count,
                                              total_questions_count=total_questions_count))
     return response
-
 
 
 def generate_evaluation(question, audio_file_path):
@@ -153,12 +152,15 @@ def generate_evaluation(question, audio_file_path):
         return
 
     try:
-        for chunk in evaluate_language_audio(question.question_text, question.answer, audio_file_path):
+        for chunk in evaluate_language_audio("English", "German",
+                                             question.question_text,
+                                             audio_file_path):
             yield chunk
     except Exception as e:
         error_message = f"Error in generate_evaluation: {str(e)}"
         current_app.logger.error(error_message)
         yield html.escape(error_message)
+
 
 def generate_audio_evaluation(question, audio_file_path, user_id, prep_session_id):
     full_response = ""
@@ -216,8 +218,6 @@ def evaluate_audio():
     #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
 
-
-
 @language_practice.route('/evaluate_text', methods=['POST'])
 @login_required
 def evaluate_text():
@@ -237,7 +237,7 @@ def evaluate_text():
         if not prep_session or prep_session.user_id != current_user.id:
             return jsonify({'error': 'Invalid session'}), 403
 
-        #evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
+        # evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
         raise NotImplemented("Not implemented yet")
         # Extract feedback and scores
         feedback, correctness, completeness = extract_feedback_and_scores(evaluation_result)
@@ -259,5 +259,3 @@ def evaluate_text():
     except Exception as e:
         current_app.logger.error(f"Error in evaluate_text: {str(e)}")
         return jsonify({'error': f'An error occurred while evaluating the answer {str(e)}'}), 500
-
-
