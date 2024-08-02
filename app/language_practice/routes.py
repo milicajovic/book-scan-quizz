@@ -2,6 +2,8 @@ import html
 import os
 
 from typing import Optional
+
+from google_ai.evaluate_language_audio import evaluate_language_audio
 from . import language_practice
 from flask import current_app, jsonify, Response, stream_with_context, session, abort
 from flask import make_response
@@ -12,7 +14,7 @@ from flask_login import login_required
 from werkzeug.exceptions import NotFound
 
 
-from google_ai import evaluate_text_answer, evaluate_audio_answer
+#from google_ai import evaluate_text_answer, evaluate_audio_answer
 
 
 from .. import db
@@ -151,7 +153,7 @@ def generate_evaluation(question, audio_file_path):
         return
 
     try:
-        for chunk in evaluate_audio_answer(question.question_text, question.answer, audio_file_path):
+        for chunk in evaluate_language_audio(question.question_text, question.answer, audio_file_path):
             yield chunk
     except Exception as e:
         error_message = f"Error in generate_evaluation: {str(e)}"
@@ -235,8 +237,8 @@ def evaluate_text():
         if not prep_session or prep_session.user_id != current_user.id:
             return jsonify({'error': 'Invalid session'}), 403
 
-        evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
-
+        #evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
+        raise NotImplemented("Not implemented yet")
         # Extract feedback and scores
         feedback, correctness, completeness = extract_feedback_and_scores(evaluation_result)
 
