@@ -155,7 +155,7 @@ def generate_evaluation(question, audio_file_path):
         for chunk in evaluate_language_audio("English", "German",
                                              question.question_text,
                                              audio_file_path):
-            yield chunk
+            yield chunk 
     except Exception as e:
         error_message = f"Error in generate_evaluation: {str(e)}"
         current_app.logger.error(error_message)

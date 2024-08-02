@@ -30,7 +30,7 @@
         const QUESTION_ID = "{{ question.id }}";
         const SESSION_ID = "{{ session_id }}";
 
-        initAudioRecording('{{ url_for("quiz_session.evaluate_audio") }}', QUESTION_ID, SESSION_ID);
+        initAudioRecording('{{ url_for("language_practice.evaluate_audio") }}', QUESTION_ID, SESSION_ID);
 
     </script>
 {% endblock %}
