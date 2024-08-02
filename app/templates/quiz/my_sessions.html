@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Quiz Sessions</h1>
+    {% if sessions %}
+        <div class="list-group">
+        {% for session in sessions %}
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ session.quiz_title }}</h5>
+                    <small>{{ session.start_time.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                <p class="mb-1">Status: {{ session.status.capitalize() }}</p>
+                <div class="progress mb-2" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ session.progress.percentage }}%;" 
+                         aria-valuenow="{{ session.progress.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ session.progress.answered }}/{{ session.progress.total }}
+                    </div>
+                </div>
+                <div class="btn-group" role="group">
+                    {% if session.progress.percentage > 95 %}
+                        <a href="{{ url_for('quiz_session.complete', session_id=session.id) }}" class="btn btn-primary btn-sm">View Results</a>
+                    {% else %}
+                        <a href="{{ url_for('quiz.dispatch_session', session_id=session.id) }}" class="btn btn-success btn-sm">Continue</a>
+                    {% endif %}
+                    <button class="btn btn-secondary btn-sm share-quiz" data-quiz-id="{{ session.quiz_id }}">Share Quiz</button>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <p>You haven't started any quiz sessions yet.</p>
+    {% endif %}
+    <a href="{{ url_for('quiz.index') }}" class="btn btn-primary mt-3">Back to Quizzes</a>
+</div>
+
+<!-- Toast for showing "Link copied" message -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="linkCopiedToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+            Link copied to clipboard!
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.share-quiz');
+    const toast = new bootstrap.Toast(document.getElementById('linkCopiedToast'), {
+        delay: 2000
+    });
+
+    const dispatchUrl = "{{ url_for('quiz.dispatch', quiz_id='QUIZ_ID') }}";
+
+    shareButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const quizId = this.getAttribute('data-quiz-id');
+            const shareUrl = `${window.location.origin}${dispatchUrl.replace('QUIZ_ID', quizId)}`;
+
+            navigator.clipboard.writeText(shareUrl).then(function() {
+                toast.show();
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

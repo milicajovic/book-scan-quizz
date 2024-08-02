@@ -5,7 +5,7 @@ import os
 from . import quiz
 from .forms import CreateQuizForm, EditQuizForm, QuestionForm
 from .. import db
-from ..models import Quiz, Question, PageScan
+from ..models import Quiz, Question, PageScan, PrepSession
 from google_ai import generate_questions  # Updated import statement
 from flask import jsonify
 
@@ -16,6 +16,22 @@ def index():
     user_quizzes = Quiz.query.filter_by(user_owner_id=current_user.id).all()
     return render_template('quiz/index.html', quizzes=user_quizzes)
 
+
+@quiz.route('/dispatch_session/<string:session_id>')
+@login_required
+def dispatch_session(session_id):
+    prep_session = PrepSession.query.get_or_404(session_id)
+
+    # Check if the user owns this session
+    if prep_session.user_id != current_user.id:
+        abort(403)  # Forbidden if the user doesn't own the session
+    # Check the quiz type
+    if prep_session.quiz.type.lower() == 'language':
+        return redirect(url_for('language_practice.answer_question', session_id=session_id))
+    else:
+        return redirect(url_for('quiz_session.answer_question', session_id=session_id))
+
+
 @quiz.route('/dispatch/<string:quiz_id>')
 def dispatch(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
@@ -23,6 +39,38 @@ def dispatch(quiz_id):
         return redirect(url_for('language_practice.start', quiz_id=quiz_id))
     else:
         return redirect(url_for('quiz_session.start', quiz_id=quiz_id))
+
+
+
+
+@quiz.route('/my-sessions')
+@login_required
+def my_sessions():
+    # Fetch all prep sessions for the current user
+    prep_sessions = PrepSession.query.filter_by(user_id=current_user.id).order_by(PrepSession.start_time.desc()).all()
+
+    # Prepare data for the template
+    sessions_data = []
+    for session in prep_sessions:
+        total_questions = session.get_total_quiz_questions_count()
+        answered_questions = session.get_distinct_answered_questions_count()
+        progress_percentage = (answered_questions / total_questions) * 100 if total_questions > 0 else 0
+
+        sessions_data.append({
+            'id': session.id,
+            'quiz_title': session.quiz.title,
+            'quiz_id': session.quiz_id,  # Add this line
+            'start_time': session.start_time,
+            'status': session.status,
+            'progress': {
+                'answered': answered_questions,
+                'total': total_questions,
+                'percentage': progress_percentage
+            }
+        })
+
+    return render_template('quiz/my_sessions.html', sessions=sessions_data)
+
 
 @quiz.route('/create', methods=['GET', 'POST'])
 @login_required

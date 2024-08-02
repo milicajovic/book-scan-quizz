@@ -2,6 +2,8 @@
 {% block content %}
     <h1>My Quizzes</h1>
     <a href="{{ url_for('quiz.create') }}" class="btn btn-primary">Create New Quiz</a>
+    <a href="{{ url_for('quiz.my_sessions') }}" class="btn btn-secondary">My Quiz Sessions</a>
+
     <ul class="list-group mt-3">
         {% for quiz in quizzes %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
