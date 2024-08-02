@@ -16,6 +16,13 @@ def index():
     user_quizzes = Quiz.query.filter_by(user_owner_id=current_user.id).all()
     return render_template('quiz/index.html', quizzes=user_quizzes)
 
+@quiz.route('/dispatch/<string:quiz_id>')
+def dispatch(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    if quiz.type.lower() == 'language':
+        return redirect(url_for('language_practice.start', quiz_id=quiz_id))
+    else:
+        return redirect(url_for('quiz_session.start', quiz_id=quiz_id))
 
 @quiz.route('/create', methods=['GET', 'POST'])
 @login_required
