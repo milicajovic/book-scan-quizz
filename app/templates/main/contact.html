@@ -1,23 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Contact - My Website{% endblock %}
+{% block title %}Contact - AI-Quizzer{% endblock %}
 
 {% block content %}
-<h1>Contact Us</h1>
-<p>Get in touch with us for any inquiries or project discussions.</p>
-<form>
-    <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="name" required>
+<div class="container">
+    <h1 class="mb-4">Contact Us</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <p class="lead">If you have any questions or concerns, please don't hesitate to get in touch with us.</p>
+            <p>You can reach us at: <a href="mailto:almir@software-advantage.com">almir@software-advantage.com</a></p>
+        </div>
     </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" required>
+
+    <div class="mt-5">
+        <h2>Privacy Statement</h2>
+        <p>At AI-Quizzer, we take your privacy seriously. Here's what you need to know about how we handle your data:</p>
+        <ul>
+            <li>All data processing occurs on Google Cloud infrastructure.</li>
+            <li>The information you provide is used solely for the purpose of evaluating your questions and improving our service.</li>
+            <li>We do not share your personal information with third parties.</li>
+            <li>Your data is securely stored and protected in accordance with industry standards.</li>
+        </ul>
+        <p>By using our service, you consent to the collection and use of your information as described above. If you have any questions about our privacy practices, please contact us using the email provided.</p>
     </div>
-    <div class="mb-3">
-        <label for="message" class="form-label">Message</label>
-        <textarea class="form-control" id="message" rows="3" required></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+</div>
 {% endblock %}
