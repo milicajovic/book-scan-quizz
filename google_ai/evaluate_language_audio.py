@@ -1,6 +1,8 @@
 import google.generativeai as genai
 from flask import current_app
 from typing import Generator
+
+from app.language_utils import get_language_name
 from .config import GENERATION_CONFIG, SAFETY_SETTINGS, DEFAULT_MODEL
 
 LANGUAGE_EVALUATION_PROMPT = """
@@ -45,10 +47,11 @@ def evaluate_language_audio(
             generation_config=GENERATION_CONFIG,
             safety_settings=SAFETY_SETTINGS
         )
-
+        display_user_lng = get_language_name(user_language)
+        display_target_lng = get_language_name(target_language)
         evaluation_prompt = f"""
-        User's native language: {user_language}
-        Language being learned: {target_language}
+        User's native language: {display_user_lng}
+        Language being learned: {display_target_lng}
         Speaking prompt: '{prompt}'
 
         {LANGUAGE_EVALUATION_PROMPT}

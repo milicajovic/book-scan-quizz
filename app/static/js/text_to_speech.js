@@ -1,8 +1,10 @@
 // text_to_speech.js
 import LanguageUtils from "./language_utils.js";
+import LanguagePreferenceSender from "./language_preference_sender.js";
 
 class TextToSpeech {
     constructor() {
+        //this.sessionId = sessionId;
         this.speechSynthesis = window.speechSynthesis;
         this.speechUtterance = new SpeechSynthesisUtterance();
         this.voices = [];
@@ -11,6 +13,13 @@ class TextToSpeech {
         this.isSpeaking = false;
         this.textBuffer = '';
         this.speechQueue = [];
+    }
+
+    static getInstance() {
+        if (!TextToSpeech.instance) {
+            TextToSpeech.instance = new TextToSpeech();
+        }
+        return TextToSpeech.instance;
     }
 
     init() {
@@ -52,9 +61,19 @@ class TextToSpeech {
             });
         }
     }
+     getLanguageCodeFromVoice(voice) {
+        return voice.lang.split('-')[0];
+    }
 
     saveSelectedVoice(voiceURI) {
+        //console.log("saving voice")
         localStorage.setItem('selectedVoiceURI', voiceURI);
+        const voice = this.voices.find(v => v.voiceURI === voiceURI);
+        if (voice) {
+            const languageCode = this.getLanguageCodeFromVoice(voice);
+            //console.log("sending language" + languageCode)
+            LanguagePreferenceSender.sendLanguagePreference(languageCode);
+        }
     }
 
     loadVoices() {
@@ -220,13 +239,6 @@ class TextToSpeech {
         if (typeof QuizSessionTTS !== 'undefined' && typeof QuizSessionTTS.readCurrentQuestion === 'function') {
             QuizSessionTTS.readCurrentQuestion();
         }
-    }
-
-    static getInstance() {
-        if (!TextToSpeech.instance) {
-            TextToSpeech.instance = new TextToSpeech();
-        }
-        return TextToSpeech.instance;
     }
 }
 

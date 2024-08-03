@@ -94,7 +94,7 @@ def create():
 
 def save_quiz(title, language, quiz_type):
     try:
-        quiz = Quiz(title=title, language=language, type=quiz_type, user_owner_id=current_user.id)
+        quiz = Quiz(title=title, lng=language, type=quiz_type, user_owner_id=current_user.id)
         db.session.add(quiz)
         db.session.flush()  # To get the quiz id
         return quiz
@@ -112,7 +112,7 @@ def edit(quiz_id):
     form = EditQuizForm(obj=quiz)
     if form.validate_on_submit():
         quiz.title = form.title.data
-        quiz.language = form.language.data
+        quiz.lng = form.lng.data
         quiz.type = form.type.data
 
         uploaded_images = []

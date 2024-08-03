@@ -65,6 +65,7 @@
 
         {% block tts_controls %}
             <!-- Mode Toggle Switch -->
+            <input type="hidden" id="session-id" value="{{ session_id }}">
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="mode-toggle">
                 <label class="form-check-label" for="mode-toggle">

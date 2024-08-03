@@ -16,3 +16,4 @@ SQLAlchemy~=2.0.31
 Flask-WTF
 gunicorn
 psycopg2-binary
+langcodes

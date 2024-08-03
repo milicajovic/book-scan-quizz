@@ -12,6 +12,7 @@ from werkzeug.exceptions import NotFound
 from google_ai.evaluate_language_audio import evaluate_language_audio
 from . import language_practice
 from .. import db
+from ..language_utils import get_language_from_headers
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
 from ..quiz_session.routes import store_answer, extract_feedback_and_scores, validate_input, process_audio_file
@@ -62,7 +63,11 @@ def start(quiz_id):
     if existing_session:
         return redirect(url_for('language_practice.answer_question', session_id=existing_session.id))
 
-    new_session = PrepSession(user_id=current_user.id, quiz_id=quiz_id, status='in_progress')
+    language_code = get_language_from_headers(request.headers)
+
+    new_session = PrepSession(user_id=current_user.id, quiz_id=quiz_id,
+                              status='in_progress', lng=language_code)
+
     db.session.add(new_session)
     db.session.commit()
     return redirect(url_for('language_practice.answer_question', session_id=new_session.id))
@@ -146,7 +151,7 @@ def complete(session_id):
     return response
 
 
-def generate_evaluation(question, audio_file_path,  user_language="English"):
+def generate_evaluation(question, audio_file_path,  user_language):
     if not os.path.exists(audio_file_path):
         yield html.escape(f"Error: Audio file not found: {audio_file_path}")
         return
@@ -166,7 +171,7 @@ def generate_audio_evaluation(question, audio_file_path, prep_session):
     full_response = ""
 
     try:
-        for chunk in generate_evaluation(question, audio_file_path):
+        for chunk in generate_evaluation(question, audio_file_path, user_language=prep_session.lng):
             full_response += chunk
             yield chunk
 

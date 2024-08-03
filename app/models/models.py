@@ -29,7 +29,7 @@ class Quiz(db.Model):
     user_owner_id = Column(String(36), ForeignKey('user.id'))
     title = Column(String(255))
     created_date = Column(DateTime, default=func.now())
-    language = Column(String(50))  # New column for quiz language
+    lng = Column(String(50))  # New column for quiz language
     type = Column(String(20), nullable=False, default='QUESTIONS')
 
     owner = relationship("User", back_populates="quizzes")
@@ -37,10 +37,10 @@ class Quiz(db.Model):
     page_scans = relationship("PageScan", back_populates="quiz")
     prep_sessions = relationship("PrepSession", back_populates="quiz")
 
-    def __init__(self, title, user_owner_id, language=None, type=QuizType.QUESTIONS):
+    def __init__(self, title, user_owner_id, lng=None, type=QuizType.QUESTIONS):
         self.title = title
         self.user_owner_id = user_owner_id
-        self.language = language
+        self.lng = lng
         self.type = type
 
 class Question(db.Model):
@@ -87,6 +87,7 @@ class PrepSession(db.Model):
     end_time = db.Column(db.DateTime)
     status = db.Column(db.String(20))  # 'in_progress', 'completed', 'abandoned'
     score = db.Column(db.Float)
+    lng = db.Column(db.String(50))  # New column added
 
     user = db.relationship("User", back_populates="prep_sessions")
     quiz = db.relationship("Quiz", back_populates="prep_sessions")

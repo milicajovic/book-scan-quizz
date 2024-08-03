@@ -16,7 +16,7 @@ class CreateQuizForm(FlaskForm):
 
 class EditQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
-    language = StringField('Quiz Language')
+    lng = StringField('Quiz Language')
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Additional Images', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')

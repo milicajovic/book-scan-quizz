@@ -16,10 +16,30 @@ from google_ai import evaluate_text_answer, evaluate_audio_answer
 
 from . import quiz_session
 from .. import db
+from ..language_utils import get_language_from_headers, get_language_code
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
 
 
+@quiz_session.route('/set-language', methods=['POST'])
+@login_required
+def set_language():
+    data = request.json
+    session_id = data.get('session_id')
+    language = data.get('language', 'en')
+
+    if not session_id:
+        return jsonify({'success': False, 'error': 'Session ID is required'}), 400
+
+    prep_session = PrepSession.query.get_or_404(session_id)
+
+    if prep_session.user_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    prep_session.lng = get_language_code(language)
+    db.session.commit()
+
+    return jsonify({'success': True})
 @quiz_session.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
@@ -33,7 +53,10 @@ def start(quiz_id):
     if existing_session:
         return redirect(url_for('quiz_session.answer_question', session_id=existing_session.id))
 
-    new_session = PrepSession(user_id=current_user.id, quiz_id=quiz_id, status='in_progress')
+    language_code = get_language_from_headers(request.headers)
+
+    new_session = PrepSession(user_id=current_user.id, quiz_id=quiz_id,
+                              status='in_progress', lng=language_code)
     db.session.add(new_session)
     db.session.commit()
     return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
