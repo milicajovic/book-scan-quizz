@@ -15,6 +15,10 @@
             {{ form.difficulty_level.label(class="form-label") }}
             {{ form.difficulty_level(class="form-select") }}
         </div>
+         <div class="mb-3">
+            {{ form.position.label(class="form-label") }}
+            {{ form.position(class="form-control") }}
+        </div>
         {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}

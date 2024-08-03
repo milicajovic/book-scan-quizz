@@ -143,7 +143,7 @@ def edit(quiz_id):
         flash('Quiz updated successfully!', 'success')
         return redirect(url_for('quiz.edit', quiz_id=quiz.id))
 
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
+    questions = Question.query.filter_by(quiz_id=quiz_id).order_by(Question.position, Question.id).all()
     return render_template('quiz/edit.html', form=form, quiz=quiz, questions=questions)
 
 
@@ -275,6 +275,7 @@ def edit_question(quiz_id, question_id):
         question.question_text = form.question_text.data
         question.answer = form.answer.data
         question.difficulty_level = form.difficulty_level.data
+        question.position = form.position.data
         db.session.commit()
         flash('Question updated successfully!', 'success')
         return redirect(url_for('quiz.edit', quiz_id=quiz_id))

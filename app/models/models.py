@@ -102,7 +102,7 @@ class PrepSession(db.Model):
         next_question = Question.query.filter(
             Question.quiz_id == self.quiz_id,
             ~Question.id.in_(answered_question_ids) # NOT in
-        ).order_by(Question.id).first()
+        ).order_by(Question.position, Question.id).first()
         return next_question
 
     def get_distinct_answered_questions_count(self):

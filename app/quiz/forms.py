@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, MultipleFileField, SelectField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, MultipleFileField, SelectField, IntegerField
+from wtforms.validators import DataRequired, Optional
 from flask_wtf.file import FileAllowed, FileRequired
 from ..models.models import QuizType
 
@@ -31,5 +31,7 @@ class QuestionForm(FlaskForm):
                                             ('medium', 'Medium'),
                                             ('hard', 'Hard')],
                                    validators=[DataRequired()])
+    position = IntegerField('Position', validators=[Optional()])
+
     submit = SubmitField('Save Question')
 
