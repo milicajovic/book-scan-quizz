@@ -6,7 +6,7 @@ from ..models.models import QuizType
 
 class CreateQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
-    language = StringField('Quiz Language')
+    lng = StringField('Quiz Language')
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Images', validators=[
        # FileRequired(),

@@ -110,7 +110,7 @@ def answer_question(session_id):
     answer_mode = session.get('answer_mode', 'audio')
 
     # Choose the template based on the answer_mode
-    template = 'language_practice/audio.html' if answer_mode == 'audio' else 'language_practice/text.html'
+    template = 'language_practice/audio.html'
 
     return render_template(template,
                            question=current_question,
@@ -157,7 +157,7 @@ def generate_evaluation(question, audio_file_path,  user_language):
         return
 
     try:
-        for chunk in evaluate_language_audio(user_language, question.quiz.language,
+        for chunk in evaluate_language_audio(user_language, question.quiz.lng,
                                              question.question_text,
                                              audio_file_path):
             yield chunk
