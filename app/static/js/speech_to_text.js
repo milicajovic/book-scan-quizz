@@ -117,7 +117,7 @@ class SpeechRecognitionHandler {
     addRecordButtonListeners() {
         this.recordButton.addEventListener('mousedown', this.startRecording.bind(this));
         this.recordButton.addEventListener('mouseup', this.stopRecording.bind(this));
-        this.recordButton.addEventListener('mouseleave', this.stopRecording.bind(this));
+        //this.recordButton.addEventListener('mouseleave', this.stopRecording.bind(this));
 
         this.recordButton.addEventListener('touchstart', (e) => {
             e.preventDefault();
