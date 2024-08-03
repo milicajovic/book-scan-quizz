@@ -1,9 +1,8 @@
 {% extends "base.html" %}
+{% block title %}About - AI Quizzer{% endblock %}
 
-{% block title %}About - AI Quizzer
-
-{% endblock %}
 {% block extra_css %}
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +10,7 @@
             color: #333;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 70px 20px 20px;
         }
 
         h1, h2 {
@@ -37,14 +36,37 @@
             font-style: italic;
             color: #2980b9;
         }
-    </style>
 
+        /* Updated styles for a smaller header */
+        .page-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 20px; /* Reduced padding */
+            text-align: center;
+            margin-bottom: 20px; /* Reduced bottom margin */
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: white;
+            font-size: 2em; /* Slightly reduced font size */
+        }
+
+        .content-wrapper {
+            margin-top: 10px; /* Slightly reduced top margin */
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-
-    <br>
-
+    <!-- New header section -->
+    <header class="page-header">
+        <h1>About AI-Quizzer</h1>
+    </header>
     <p>Welcome to AI-Quizzer, an innovative learning application that harnesses the power of Google's Gemini AI to
         transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning
         experience that caters to diverse learning styles and needs.</p>
@@ -93,8 +115,9 @@
     <div class="feature">
         <h3> Adaptive Technology</h3>
         <ul>
-            <li>Choose between on-device AI for quick, low-bandwidth use or cloud-based AI for enhanced capabilities.</li>
-            <li>Seamlessly switch between text,  and speech inputs to suit your learning environment.</li>
+            <li>Choose between on-device AI for quick, low-bandwidth use or cloud-based AI for enhanced capabilities.
+            </li>
+            <li>Seamlessly switch between text, and speech inputs to suit your learning environment.</li>
         </ul>
     </div>
 
