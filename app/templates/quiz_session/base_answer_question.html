@@ -64,12 +64,18 @@
 
 
         {% block tts_controls %}
+            <input type="hidden" id="session-id" value="{{ session_id }}">
+
             <!-- Mode Toggle Switch -->
             <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="mode-toggle">
-                <label class="form-check-label" for="mode-toggle">
-                    {% block mode_toggle_label %}{% endblock %}
-                </label>
+                <input class="form-check-input" type="checkbox" id="mode-toggle" {% if is_text_mode %}checked{% endif %}>
+            <label class="form-check-label" for="mode-toggle">
+                {% if is_text_mode %}
+                    Switch to Audio Mode
+                {% else %}
+                    Switch to Text Mode
+                {% endif %}
+            </label>
             </div>
 
             <div id="tts-controls" class="mb-4">

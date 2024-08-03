@@ -82,6 +82,11 @@ def answer_question(session_id):
     answered_count = prep_session.get_distinct_answered_questions_count()
     total_count = prep_session.get_total_quiz_questions_count()
 
+    # Handle the set_mode query parameter
+    set_mode = request.args.get('set_mode')
+    if set_mode in ['audio', 'text']:
+        session['answer_mode'] = set_mode
+
     if total_count == 0:
         raise NotFound("This quiz has no questions. Please contact the administrator.")
 
@@ -98,7 +103,12 @@ def answer_question(session_id):
     answer_mode = session.get('answer_mode', 'audio')
 
     # Choose the template based on the answer_mode
-    template = 'quiz_session/answer_question_audio.html' if answer_mode == 'audio' else 'quiz_session/answer_question_text.html'
+    is_text_mode = False
+    if answer_mode == 'audio':
+        template = 'quiz_session/answer_question_audio.html'
+    else:
+        is_text_mode = True
+        template = 'quiz_session/answer_question_text.html'
 
     return render_template(template,
                            question=current_question,
@@ -106,7 +116,9 @@ def answer_question(session_id):
                            progress_percentage=progress_percentage,
                            answered_count=answered_count,
                            total_count=total_count,
-                           answer_mode=answer_mode)
+                           answer_mode=answer_mode,
+                           is_text_mode=is_text_mode
+                           )
 
 
 
