@@ -25,7 +25,7 @@ class TextToSpeech {
 
     init() {
         return new Promise((resolve, reject) => {
-             if (this.isInitialized) {
+            if (this.isInitialized) {
                 console.log("TextToSpeech already initialized.");
                 resolve(true);
                 return;
@@ -140,7 +140,7 @@ class TextToSpeech {
         });
     }
 
-     populateVoiceList(filter = '') {
+    populateVoiceList(filter = '') {
         const voiceSelect = document.getElementById('voice-select');
         if (voiceSelect) {
             voiceSelect.innerHTML = '';
@@ -187,6 +187,7 @@ class TextToSpeech {
             this.setVoice(voiceSelect.options[0].value);
         }
     }
+
     setDefaultVoice() {
         const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
         if (savedVoiceURI) {
@@ -311,9 +312,9 @@ class TextToSpeech {
     }
 
     triggerReadQuestion() {
-        if (typeof QuizSessionTTS !== 'undefined' && typeof QuizSessionTTS.readCurrentQuestion === 'function') {
-            QuizSessionTTS.readCurrentQuestion();
-        }
+        console.log('triggerReadQuestion called'); // Added logging
+        const questionText = document.getElementById('question-text')?.textContent;
+        this.speakWithoutBuffering(questionText);
     }
 }
 
