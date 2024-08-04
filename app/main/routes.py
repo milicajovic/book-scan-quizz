@@ -9,6 +9,10 @@ from . import main
 def home():
     return render_template('main/home.html')
 
+@main.route('/tts-experiment')
+def tts_experiment():
+    return render_template('main/tts_experiment.html')
+
 @main.route('/about')
 def about():
     return render_template('main/about.html')

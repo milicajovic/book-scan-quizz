@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSML Multilingual Speech Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button, select {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-left: 3px solid #f36d33;
+            color: #666;
+            page-break-inside: avoid;
+            font-family: monospace;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 1.6em;
+            max-width: 100%;
+            overflow: auto;
+            padding: 1em 1.5em;
+            display: block;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>SSML Multilingual Speech Demo</h1>
+    <label for="voiceSelect">Select Voice:</label>
+    <select id="voiceSelect"></select>
+    <button id="speakMultilingual">Speak Multilingual SSML</button>
+    <button id="stopSpeech">Stop Speech</button>
+
+    <h2>SSML Content:</h2>
+    <pre id="ssmlContent"></pre>
+
+    <script>
+        const synth = window.speechSynthesis;
+        const voiceSelect = document.getElementById('voiceSelect');
+
+        const ssml = `
+        <speak>
+            <lang xml:lang="en-US">
+                Hello! This is a demonstration of multilingual speech using SSML.
+            </lang>
+            <break time="1s"/>
+            <lang xml:lang="de-DE">
+                Hallo! Dies ist eine Demonstration mehrsprachiger Sprache mit SSML.
+            </lang>
+        </speak>
+        `;
+
+        document.getElementById('ssmlContent').textContent = ssml;
+
+        function populateVoiceList() {
+            const voices = synth.getVoices();
+            voiceSelect.innerHTML = '';
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.setAttribute('data-lang', voice.lang);
+                option.setAttribute('data-name', voice.name);
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        populateVoiceList();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        document.getElementById('speakMultilingual').addEventListener('click', () => {
+            const utterance = new SpeechSynthesisUtterance(ssml);
+            const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            const selectedVoice = synth.getVoices().find(voice => voice.name === selectedOption);
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+
+            synth.cancel(); // Cancel any ongoing speech
+            synth.speak(utterance);
+        });
+
+        document.getElementById('stopSpeech').addEventListener('click', () => {
+            synth.cancel();
+        });
+    </script>
+</body>
+</html>
