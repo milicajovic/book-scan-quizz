@@ -18,12 +18,18 @@ class TextToSpeech {
     static getInstance() {
         if (!TextToSpeech.instance) {
             TextToSpeech.instance = new TextToSpeech();
+
         }
         return TextToSpeech.instance;
     }
 
     init() {
         return new Promise((resolve, reject) => {
+             if (this.isInitialized) {
+                console.log("TextToSpeech already initialized.");
+                resolve(true);
+                return;
+            }
             if ('speechSynthesis' in window) {
                 this.speechSynthesis = window.speechSynthesis;
                 this.speechUtterance = new SpeechSynthesisUtterance();
@@ -44,9 +50,45 @@ class TextToSpeech {
         });
     }
 
+    createFilterInput() {
+        const voiceSelect = document.getElementById('voice-select');
+        if (voiceSelect) {
+            const filterInput = document.createElement('input');
+            filterInput.type = 'text';
+            filterInput.id = 'voice-filter';
+            filterInput.className = 'form-control mb-2';
+            filterInput.placeholder = 'Filter voices...';
+
+            // Insert the filter input before the voice select dropdown
+            voiceSelect.parentNode.insertBefore(filterInput, voiceSelect);
+
+            // Set initial filter value based on user's language
+            const userLanguage = navigator.language || navigator.userLanguage;
+            let initialFilter = userLanguage.split('-')[0]; // Get the language code (e.g., 'de' from 'de-DE')
+
+            // Add 'google' for Chrome users
+            if (navigator.userAgent.includes('Chrome')) {
+                initialFilter += ' google';
+            }
+
+            filterInput.value = initialFilter;
+
+            return filterInput;
+        }
+        return null;
+    }
+
     setupVoiceSelection() {
         const voiceSelect = document.getElementById('voice-select');
         if (voiceSelect) {
+            const filterInput = this.createFilterInput();
+
+            if (filterInput) {
+                filterInput.addEventListener('input', () => {
+                    this.populateVoiceList(filterInput.value);
+                });
+            }
+
             const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
             if (savedVoiceURI) {
                 voiceSelect.value = savedVoiceURI;
@@ -59,9 +101,13 @@ class TextToSpeech {
                 this.updateLanguage(selectedVoiceURI);
                 this.triggerReadQuestion();
             });
+
+            // Initial population of the voice list
+            this.populateVoiceList(filterInput ? filterInput.value : '');
         }
     }
-     getLanguageCodeFromVoice(voice) {
+
+    getLanguageCodeFromVoice(voice) {
         return voice.lang.split('-')[0];
     }
 
@@ -94,24 +140,53 @@ class TextToSpeech {
         });
     }
 
-    populateVoiceList() {
+     populateVoiceList(filter = '') {
         const voiceSelect = document.getElementById('voice-select');
         if (voiceSelect) {
             voiceSelect.innerHTML = '';
-            this.voices.forEach((voice) => {
-                const option = document.createElement('option');
-                option.textContent = `${voice.name} (${voice.lang})`;
-                option.value = voice.voiceURI;
-                voiceSelect.appendChild(option);
-            });
-
-            const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
-            if (savedVoiceURI) {
-                voiceSelect.value = savedVoiceURI;
-            }
+            const filteredVoices = this.filterVoices(filter);
+            this.addVoicesToSelect(voiceSelect, filteredVoices);
+            this.selectAppropriateVoice(voiceSelect);
         }
     }
 
+    filterVoices(filter) {
+        const filterTerms = filter.toLowerCase().split(' ');
+        return this.voices.filter(voice => {
+            const voiceInfo = `${voice.name} (${voice.lang})`.toLowerCase();
+            return filterTerms.every(term => voiceInfo.includes(term));
+        });
+    }
+
+    addVoicesToSelect(voiceSelect, voices) {
+        voices.forEach(voice => {
+            const option = document.createElement('option');
+            option.textContent = `${voice.name} (${voice.lang})`;
+            option.value = voice.voiceURI;
+            voiceSelect.appendChild(option);
+        });
+    }
+
+    selectAppropriateVoice(voiceSelect) {
+        const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+        if (savedVoiceURI) {
+            const savedOption = voiceSelect.querySelector(`option[value="${savedVoiceURI}"]`);
+            if (savedOption) {
+                savedOption.selected = true;
+            } else {
+                this.selectFirstAvailableVoice(voiceSelect);
+            }
+        } else {
+            this.selectFirstAvailableVoice(voiceSelect);
+        }
+    }
+
+    selectFirstAvailableVoice(voiceSelect) {
+        if (voiceSelect.options.length > 0) {
+            voiceSelect.options[0].selected = true;
+            this.setVoice(voiceSelect.options[0].value);
+        }
+    }
     setDefaultVoice() {
         const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
         if (savedVoiceURI) {
