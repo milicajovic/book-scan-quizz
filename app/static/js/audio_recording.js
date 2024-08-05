@@ -65,13 +65,13 @@ class AudioRecorder {
     addEventListeners() {
         this.recordButton.addEventListener('mousedown', () => this.handleRecording('start'));
         this.recordButton.addEventListener('mouseup', () => this.handleRecording('stop'));
-        this.recordButton.addEventListener('mouseleave', () => this.handleRecording('stop'));
+        //this.recordButton.addEventListener('mouseleave', () => this.handleRecording('stop'));
 
-        this.recordButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.startRecording();
-        });
-        this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
+        // this.recordButton.addEventListener('touchstart', (e) => {
+        //     e.preventDefault();
+        //     this.startRecording();
+        // });
+        // this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
     }
 
     handleRecording(action) {

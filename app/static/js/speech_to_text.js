@@ -119,11 +119,11 @@ class SpeechRecognitionHandler {
         this.recordButton.addEventListener('mouseup', this.stopRecording.bind(this));
         //this.recordButton.addEventListener('mouseleave', this.stopRecording.bind(this));
 
-        this.recordButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.startRecording();
-        });
-        this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
+        // this.recordButton.addEventListener('touchstart', (e) => {
+        //     e.preventDefault();
+        //     this.startRecording();
+        // });
+        // this.recordButton.addEventListener('touchend', this.stopRecording.bind(this));
     }
 }
 
