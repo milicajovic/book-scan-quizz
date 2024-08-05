@@ -13,14 +13,24 @@ class TextToSpeech {
         this.isSpeaking = false;
         this.textBuffer = '';
         this.speechQueue = [];
+        this.loggingEnabled = false;
     }
 
     static getInstance() {
+
         if (!TextToSpeech.instance) {
             TextToSpeech.instance = new TextToSpeech();
-
+            TextToSpeech.instance.log("getInstance")
+        } else {
+            TextToSpeech.instance.log("getInstance - cached")
         }
         return TextToSpeech.instance;
+    }
+
+    log(message) {
+        if (this.loggingEnabled) {
+            console.log(message);
+        }
     }
 
     init() {
@@ -64,18 +74,23 @@ class TextToSpeech {
 
             // Set initial filter value based on user's language
             const userLanguage = navigator.language || navigator.userLanguage;
-            let initialFilter = userLanguage.split('-')[0]; // Get the language code (e.g., 'de' from 'de-DE')
-
-            // Add 'google' for Chrome users
-            if (navigator.userAgent.includes('Chrome')) {
-                initialFilter += ' google';
+            let initialFilter = this.getVoiceFromStorage();
+            if (!initialFilter) {
+                initialFilter = userLanguage.split('-')[0]; // Get the language code (e.g., 'de' from 'de-DE')
+                // Add 'google' for Chrome users
+                if (navigator.userAgent.includes('Chrome')) {
+                    initialFilter += ' google';
+                }
             }
-
             filterInput.value = initialFilter;
 
             return filterInput;
         }
         return null;
+    }
+
+    getVoiceFromStorage() {
+        return localStorage.getItem('selectedVoiceURI');
     }
 
     setupVoiceSelection() {
@@ -88,8 +103,7 @@ class TextToSpeech {
                     this.populateVoiceList(filterInput.value);
                 });
             }
-
-            const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+            const savedVoiceURI = this.getVoiceFromStorage();
             if (savedVoiceURI) {
                 voiceSelect.value = savedVoiceURI;
                 this.setVoice(savedVoiceURI);
@@ -97,7 +111,6 @@ class TextToSpeech {
             voiceSelect.addEventListener('change', (event) => {
                 const selectedVoiceURI = event.target.value;
                 this.setVoice(selectedVoiceURI);
-                this.saveSelectedVoice(selectedVoiceURI);
                 this.updateLanguage(selectedVoiceURI);
                 this.triggerReadQuestion();
             });
@@ -111,16 +124,6 @@ class TextToSpeech {
         return voice.lang.split('-')[0];
     }
 
-    saveSelectedVoice(voiceURI) {
-        //console.log("saving voice")
-        localStorage.setItem('selectedVoiceURI', voiceURI);
-        const voice = this.voices.find(v => v.voiceURI === voiceURI);
-        if (voice) {
-            const languageCode = this.getLanguageCodeFromVoice(voice);
-            //console.log("sending language" + languageCode)
-            LanguagePreferenceSender.sendLanguagePreference(languageCode);
-        }
-    }
 
     loadVoices() {
         return new Promise((resolve) => {
@@ -190,6 +193,7 @@ class TextToSpeech {
 
     setDefaultVoice() {
         const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+        this.log("setDefaultVoice:" + savedVoiceURI)
         if (savedVoiceURI) {
             this.setVoice(savedVoiceURI);
         } else {
@@ -287,13 +291,19 @@ class TextToSpeech {
     }
 
     setVoice(voiceURI) {
+        this.log("setVoice:" + voiceURI)
+
         const voice = this.voices.find(v => v.voiceURI === voiceURI);
         if (voice) {
             this.currentVoice = voice;
             this.speechUtterance.voice = voice;
             localStorage.setItem('selectedVoiceURI', voiceURI);
+            const languageCode = this.getLanguageCodeFromVoice(voice);
+            LanguagePreferenceSender.sendLanguagePreference(languageCode);
         }
+
     }
+
 
     updateSpokenTextDisplay(text) {
         const textDisplay = document.getElementById('spoken-text-display');

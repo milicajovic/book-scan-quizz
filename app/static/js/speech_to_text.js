@@ -14,7 +14,7 @@ class SpeechRecognitionHandler {
         this.feedbackText = document.getElementById('feedbackText');
         this.processingFeedback = document.getElementById('processingFeedback');
         this.actionButtons = document.getElementById('actionButtons');
-        this.loggingEnabled = true; // Set this to false to disable logging
+        this.loggingEnabled = false; // Set this to false to disable logging
         this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
 
         this.setupRecognition();
