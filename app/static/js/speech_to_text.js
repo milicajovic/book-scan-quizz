@@ -14,7 +14,7 @@ class SpeechRecognitionHandler {
         this.feedbackText = document.getElementById('feedbackText');
         this.processingFeedback = document.getElementById('processingFeedback');
         this.actionButtons = document.getElementById('actionButtons');
-        this.loggingEnabled = false; // Set this to false to disable logging
+        this.loggingEnabled = true; // Set this to false to disable logging
         this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
 
         this.setupRecognition();
@@ -28,6 +28,7 @@ class SpeechRecognitionHandler {
     }
 
     setupRecognition() {
+
         this.recognition.lang = LanguageUtils.getPreferredLanguage();
         this.recognition.interimResults = true;
         this.recognition.continuous = true;
@@ -37,23 +38,28 @@ class SpeechRecognitionHandler {
             console.error('Speech recognition error:', event.error);
             this.stopRecording();
         };
-        this.recognition.onend = this.stopRecording.bind(this);
+        //this.recognition.onend = this.stopRecording.bind(this);
+         this.recognition.onend = () => {
+            this.log('Recognition ended');
+            //this.stopRecording();
+        };
     }
 
     handleSpeechRecognitionResult(event) {
-        let interimTranscript = '';
+        this.interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
                 this.finalTranscript += transcript + ' ';
             } else {
-                interimTranscript += transcript;
+                this.interimTranscript += transcript;
             }
         }
-        this.resultElement.innerHTML = `${this.finalTranscript}<i style="color: #999;">${interimTranscript}</i>`;
+        this.resultElement.innerHTML = `${this.finalTranscript}<i style="color: #999;">${this.interimTranscript}</i>`;
     }
 
     startRecording() {
+        this.log("startRecording")
         this.finalTranscript = '';
         this.recognition.lang = LanguageUtils.getPreferredLanguage();
         this.log('Recognizing in ' + this.recognition.lang);
@@ -64,14 +70,22 @@ class SpeechRecognitionHandler {
     }
 
     stopRecording() {
+
+        this.log("stopRecording");
+
         this.recognition.stop();
         this.recordButton.textContent = 'Push to Answer';
-        if (this.finalTranscript.trim()) {
-            this.sendTranscriptToServer(this.finalTranscript.trim());
+        let completeText =this.finalTranscript+""+this.interimTranscript;
+        if (completeText.trim()) {
+            this.log("sending request!");
+            this.sendTranscriptToServer(completeText.trim());
+        }else {
+            this.log("not sending request!");
         }
     }
 
     sendTranscriptToServer(transcript) {
+        this.log("sendTranscriptToServer")
         this.processingFeedback.style.display = 'block';
         this.recordButton.disabled = true;
 
@@ -84,10 +98,10 @@ class SpeechRecognitionHandler {
             method: 'POST',
             body: formData
         })
-        .then(response => response.text())
-        .then(result => this.handleFetchResponse(result))
-        .catch(error => this.handleFetchError(error))
-        .finally(() => this.handleFetchFinally());
+            .then(response => response.text())
+            .then(result => this.handleFetchResponse(result))
+            .catch(error => this.handleFetchError(error))
+            .finally(() => this.handleFetchFinally());
     }
 
     handleFetchResponse(result) {
@@ -115,6 +129,7 @@ class SpeechRecognitionHandler {
     }
 
     addRecordButtonListeners() {
+        this.log("addRecordButtonListeners")
         this.recordButton.addEventListener('mousedown', this.startRecording.bind(this));
         this.recordButton.addEventListener('mouseup', this.stopRecording.bind(this));
         //this.recordButton.addEventListener('mouseleave', this.stopRecording.bind(this));
