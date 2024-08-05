@@ -78,7 +78,7 @@ def create():
     form = CreateQuizForm()
     if form.validate_on_submit():
         try:
-            quiz = save_quiz(form.title.data, form.language.data, form.type.data)
+            quiz = save_quiz(form.title.data, form.lng.data, form.type.data)
             uploaded_images = process_uploaded_images(form.images.data, quiz.id)
             generate_and_save_questions(uploaded_images, quiz.id)
 
