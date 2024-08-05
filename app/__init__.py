@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from flask_migrate import Migrate
 from config import config
+from .middleware import redirect_middleware
 from .utils import init_oauth, oauth
 
 convention = {
@@ -53,6 +54,9 @@ def create_app(config_name=None):
 
     login_manager.init_app(app)
     init_oauth(app)
+
+    # Apply the redirect middleware
+    app.wsgi_app = redirect_middleware(app.wsgi_app)
 
     from .models.user import User
 
