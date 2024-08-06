@@ -10,7 +10,7 @@ You are an AI language tutor evaluating a learner's spoken response. You will re
 1. The user's native language (user_language)
 2. The language they are learning (target_language)
 3. The prompt given to the learner
-4. An audio file of the learner's response
+4. An audio file of the learner's response, is already uploaded in this chat.
 
 Your task is to:
 1. Evaluate the response for pronunciation, grammar, and content relevance
@@ -33,12 +33,13 @@ Grammar: 6
 Content: 8
 """
 
+
 def evaluate_language_audio(
-    user_language: str,
-    target_language: str,
-    prompt: str,
-    audio_file: str,
-    model_name: str = DEFAULT_MODEL
+        user_language: str,
+        target_language: str,
+        prompt: str,
+        audio_file: str,
+        model_name: str = DEFAULT_MODEL
 ) -> Generator[str, None, None]:
     try:
         genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
@@ -58,15 +59,23 @@ def evaluate_language_audio(
 
         """
         #print(evaluation_prompt)
-        #print(audio_file)
+        # print(audio_file)
 
-        parts = []
         file = genai.upload_file(audio_file, mime_type="audio/wav")
-        parts.append(file)
-        parts.append(evaluation_prompt)
 
-        chat_session = model.start_chat(history=[{"role": "user", "parts": parts}])
+        chat_session = model.start_chat(
+            history=[
+                {
+                    "role": "user",
+                    "parts": [
+                        file
+                    ],
+                },
+            ]
+        )
+
         response_stream = chat_session.send_message(evaluation_prompt, stream=True)
+
 
         for chunk in response_stream:
             if chunk.text:
