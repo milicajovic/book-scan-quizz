@@ -136,7 +136,7 @@
             .then(() => {
                 console.log('TextToSpeech initialized successfully');
                 QuizSessionTTS.init();
-                window.nextQuestionUrl = '{{ url_for("quiz_session.answer_question", session_id=session_id) }}';
+                window.nextQuestionUrl = '{{ url_for("language_practice.answer_question", session_id=session_id) }}';
             })
             .catch((error) => {
                 console.error("Failed to initialize Text-to-Speech:", error);

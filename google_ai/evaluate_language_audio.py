@@ -50,12 +50,15 @@ def evaluate_language_audio(
         display_user_lng = get_language_name(user_language)
         display_target_lng = get_language_name(target_language)
         evaluation_prompt = f"""
+        {LANGUAGE_EVALUATION_PROMPT}
+        
         User's native language: {display_user_lng}
         Language being learned: {display_target_lng}
         Speaking prompt: '{prompt}'
 
-        {LANGUAGE_EVALUATION_PROMPT}
         """
+        #print(evaluation_prompt)
+        #print(audio_file)
 
         parts = []
         file = genai.upload_file(audio_file, mime_type="audio/wav")
