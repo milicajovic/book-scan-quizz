@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, session
 from .extensions import login_manager
 from .models import User
 
@@ -13,6 +13,8 @@ def unauthorized():
     else:
         # Store the current URL as the next parameter
         next_url = request.url
+
+        session['next'] = next_url
         login_url = url_for('auth.login', next=next_url)
         #return redirect(login_url)
         return render_template('errors/403.html', login_url=login_url), 403
