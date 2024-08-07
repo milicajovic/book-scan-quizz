@@ -11,23 +11,21 @@
     {% endif %}
 {% else %}
     <p>Welcome to AI-Quizzer, an innovative learning application that harnesses the power of Google's Gemini AI to transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning experience that caters to diverse learning styles and needs.</p>
-    <p>You can log in using your Google account to access more features.</p>
-    <a href="{{ url_for('auth.login', next=request.url) }}" class="btn btn-primary">Log In</a>
+    
 {% endif %}
 <!-- New section for sample quizzes -->
 <div class="mt-5">
-    <h2>Try a Quiz Now!</h2>
-    <p>Experience AI-Quizzer with these sample quizzes:</p>
+   <h2>Experience AI-Quizzer</h2>
+    <p>Try a sample quiz or create your own:</p>
     <div class="row">
+        <div class="col-md-4 mb-3">
+            <a href="/quiz/dispatch/c368fe8f-8f49-4d9f-945d-0a66fb109317" class="btn btn-primary btn-lg btn-block">German Quiz</a>
+        </div>
         <div class="col-md-4 mb-3">
             <a href="/quiz/dispatch/0569a83e-eeaf-4dd8-bd9a-56edb687c4fd" class="btn btn-success btn-lg btn-block">Biology Quiz</a>
         </div>
-
         <div class="col-md-4 mb-3">
-            <a href="/quiz/dispatch/c368fe8f-8f49-4d9f-945d-0a66fb109317" class="btn btn-primary btn-lg btn-block">German Language Quiz</a>
-        </div>
-        <div class="col-md-4 mb-3">
-            <a href="/quiz/dispatch/71f190ae-8098-44db-9c15-036b2a987b6c" class="btn btn-info btn-lg btn-block">Physics Quiz</a>
+            <a href="{{ url_for('quiz.create') }}" class="btn btn-warning btn-lg btn-block">Create Your Own Quiz</a>
         </div>
     </div>
 </div>
