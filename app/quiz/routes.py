@@ -31,8 +31,9 @@ def dispatch_session(session_id):
     else:
         return redirect(url_for('quiz_session.answer_question', session_id=session_id))
 
-@login_required
+
 @quiz.route('/dispatch/<string:quiz_id>')
+@login_required
 def dispatch(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     if quiz.type.lower() == 'language':
