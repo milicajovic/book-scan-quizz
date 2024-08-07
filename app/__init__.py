@@ -2,30 +2,10 @@ import logging
 import os
 
 from flask import Flask
-from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
-from flask_migrate import Migrate
 from config import config
-from .middleware import redirect_middleware
-from .utils import init_oauth, oauth
-
-convention = {
-    "ix": 'ix_%(column_0_label)s',
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
-}
-
-# Create metadata with naming convention
-metadata = MetaData(naming_convention=convention)
-
-# Create db with the metadata
-db = SQLAlchemy(metadata=metadata)
-migrate = Migrate()
-
-login_manager = LoginManager()
+from .extensions import init_extensions, db
+from .utils import init_oauth
+from .error_handlers import register_error_handlers
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -35,7 +15,6 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.getenv('FLASK_CONFIG', 'default')
 
-
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
@@ -44,25 +23,19 @@ def create_app(config_name=None):
 
     app.logger.info(f"Application started with configuration: {config_name}")
 
-    db.init_app(app)
-    migrate.init_app(app, db)
+    init_extensions(app)
+    init_oauth(app)
 
     if app.config['SQLALCHEMY_ECHO']:
         # Set up SQLAlchemy query logging
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    login_manager.init_app(app)
-    init_oauth(app)
+    # Import models to ensure they are registered with SQLAlchemy
+    from .models import User, Quiz, Question, Answer, PageScan, PrepSession
 
-    # Apply the redirect middleware
-    app.wsgi_app = redirect_middleware(app.wsgi_app)
-
-    from .models.user import User
-
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(user_id)
+    # Import auth_helpers here to avoid circular imports
+    from . import auth_helpers
 
     # Register blueprints
     from .main import main as main_blueprint
@@ -71,21 +44,20 @@ def create_app(config_name=None):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-
-
     from .quiz import quiz as quiz_blueprint
     app.register_blueprint(quiz_blueprint, url_prefix='/quiz')
 
-    # Register the new quiz_session blueprint
     from .quiz_session import quiz_session as quiz_session_blueprint
     app.register_blueprint(quiz_session_blueprint, url_prefix='/quiz-session')
 
-    # Register the new language_practice blueprint
     from .language_practice import language_practice as language_practice_blueprint
     app.register_blueprint(language_practice_blueprint, url_prefix='/language-practice')
 
     # Import and register the init-db command
     from .cli import init_db_command
     app.cli.add_command(init_db_command)
+
+    # Register error handlers
+    register_error_handlers(app)
 
     return app

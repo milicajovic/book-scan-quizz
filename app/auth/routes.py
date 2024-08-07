@@ -36,6 +36,11 @@ def authorized():
             login_user(user)
             session['user'] = user.to_dict()  # Store all user info in session
             flash('Logged in successfully.', 'success')
+            # Redirect to the next URL if it exists, otherwise go to home
+            next_url = session.pop('next', None)
+            if next_url:
+                return redirect(next_url)
+            return redirect(url_for('main.home'))
         else:
             flash('Failed to get user info from Google.', 'danger')
 

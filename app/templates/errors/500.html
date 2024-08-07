@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-danger">500 - Internal Server Error</h1>
+    <p class="lead">Sorry, something went wrong on our end.</p>
+    
+    {% if error.traceback %}
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Error Details:</h4>
+            <p><strong>Error Message:</strong> {{ error.message }}</p>
+            <pre class="mt-3"><code>{{ error.traceback }}</code></pre>
+        </div>
+    {% else %}
+        <p>Our team has been notified and we're working to fix the issue.</p>
+    {% endif %}
+    
+    <p class="mt-3"><a href="{{ url_for('main.home') }}" class="btn btn-primary">Return to Home</a></p>
+</div>
+{% endblock %}
