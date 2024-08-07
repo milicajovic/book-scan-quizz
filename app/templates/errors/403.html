@@ -4,13 +4,13 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-danger">403 - Forbidden</h1>
-    <p class="lead">Sorry, you don't have permission to access this page.</p>
+    <h1 class="text-danger">Oups</h1>
+    <p class="lead">Sorry, </p>
     
     {% if current_user.is_authenticated %}
-        <p>If you believe this is an error, please contact the administrator.</p>
+        <p>you don't have permission to access this page.</p>
     {% else %}
-        <p>You may need to log in to access this page.</p>
+        <p>You need to log in to access this page, click the button bellow</p>
         <a href="{{ url_for('auth.login', next=request.url) }}" class="btn btn-primary">Log In</a>
     {% endif %}
     

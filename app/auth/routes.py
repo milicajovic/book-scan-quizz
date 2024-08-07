@@ -1,4 +1,4 @@
-from flask import redirect, url_for, flash, session
+from flask import redirect, url_for, flash, session, request
 from flask_login import login_user, logout_user, current_user
 
 from . import auth
@@ -37,7 +37,8 @@ def authorized():
             session['user'] = user.to_dict()  # Store all user info in session
             flash('Logged in successfully.', 'success')
             # Redirect to the next URL if it exists, otherwise go to home
-            next_url = session.pop('next', None)
+            next_url = request.args.get('next') or session.pop('next', None)
+
             if next_url:
                 return redirect(next_url)
             return redirect(url_for('main.home'))

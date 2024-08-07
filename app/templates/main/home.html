@@ -10,8 +10,9 @@
         <img src="{{ session['user']['picture'] }}" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%;">
     {% endif %}
 {% else %}
-    <p>This is the home page of our mobile-first website. Feel free to explore other pages using the navigation menu.</p>
+    <p>Welcome to AI-Quizzer, an innovative learning application that harnesses the power of Google's Gemini AI to transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning experience that caters to diverse learning styles and needs.</p>
     <p>You can log in using your Google account to access more features.</p>
+    <a href="{{ url_for('auth.login', next=request.url) }}" class="btn btn-primary">Log In</a>
 {% endif %}
 <!-- New section for sample quizzes -->
 <div class="mt-5">
@@ -19,10 +20,11 @@
     <p>Experience AI-Quizzer with these sample quizzes:</p>
     <div class="row">
         <div class="col-md-4 mb-3">
-            <a href="/quiz/dispatch/c368fe8f-8f49-4d9f-945d-0a66fb109317" class="btn btn-primary btn-lg btn-block">German Language Quiz</a>
-        </div>
-        <div class="col-md-4 mb-3">
             <a href="/quiz/dispatch/0569a83e-eeaf-4dd8-bd9a-56edb687c4fd" class="btn btn-success btn-lg btn-block">Biology Quiz</a>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <a href="/quiz/dispatch/c368fe8f-8f49-4d9f-945d-0a66fb109317" class="btn btn-primary btn-lg btn-block">German Language Quiz</a>
         </div>
         <div class="col-md-4 mb-3">
             <a href="/quiz/dispatch/71f190ae-8098-44db-9c15-036b2a987b6c" class="btn btn-info btn-lg btn-block">Physics Quiz</a>
