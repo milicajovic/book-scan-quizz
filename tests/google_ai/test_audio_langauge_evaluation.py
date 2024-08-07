@@ -26,8 +26,8 @@ class TestAudioLanguageEvaluator(unittest.TestCase):
 
     def test_evaluate_audio_answer(self):
         try:
-            result = list(evaluate_language_audio("English",
-                                                  "German",
+            result = list(evaluate_language_audio("en",
+                                                  "de",
                                                   self.question, self.audio_path))
 
             print(result)
