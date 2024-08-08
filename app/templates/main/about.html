@@ -2,7 +2,6 @@
 {% block title %}About - AI Quizzer{% endblock %}
 
 {% block extra_css %}
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,13 +36,12 @@
             color: #2980b9;
         }
 
-        /* Updated styles for a smaller header */
         .page-header {
             background-color: #3498db;
             color: white;
-            padding: 25px 20px; /* Reduced padding */
+            padding: 25px 20px;
             text-align: center;
-            margin-bottom: 20px; /* Reduced bottom margin */
+            margin-bottom: 20px;
             border-radius: 5px;
             display: flex;
             justify-content: center;
@@ -53,23 +51,28 @@
         .page-header h1 {
             margin: 0;
             color: white;
-            font-size: 2em; /* Slightly reduced font size */
+            font-size: 2em;
         }
 
         .content-wrapper {
-            margin-top: 10px; /* Slightly reduced top margin */
+            margin-top: 10px;
         }
     </style>
 {% endblock %}
 
 {% block content %}
-    <!-- New header section -->
     <header class="page-header">
         <h1>About AI-Quizzer</h1>
     </header>
     <p>Welcome to AI-Quizzer, an innovative learning application that harnesses the power of Google's Gemini AI to
         transform the way you study and learn. Our mission is to create an intelligent, adaptive, and engaging learning
         experience that caters to diverse learning styles and needs.</p>
+
+    <div class="standout">
+        <p>AI-Quizzer was inspired by observations in Austria of the challenges faced by immigrants and refugees from various regions affected by conflicts and crises. As educational systems, including Austria's, strive to provide sufficient resources to these diverse groups, AI can step in to bridge the gap. By allowing users to generate quizzes and receive language feedback from a simple photo of a book page, AI-Quizzer offers an innovative solution for learning both the local language and school subjects.</p>
+
+        <p>We believe that AI can provide affordable, accessible support to every child, enabling them to catch up at their own pace without anxiety. Our goal is to empower students from all backgrounds to integrate more effectively into their new educational environments, breaking down barriers of language and knowledge. With AI-Quizzer, we're turning the challenges of adaptation and integration into opportunities for personalized, efficient learning.</p>
+    </div>
 
     <h2>Key Features</h2>
 
@@ -143,5 +146,4 @@
         shaping the future of education.</p>
 
     <p>Join us in the learning in AI-era. Join AI-Quizzer today and experience the future of studying!</p>
-    </main>
 {% endblock %}
