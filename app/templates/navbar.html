@@ -8,14 +8,6 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'home' %}active{% endif %}"
-                       href="{{ url_for('main.home') }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'about' %}active{% endif %}"
-                       href="{{ url_for('main.about') }}">About</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link {% if active_page == 'quiz.index' %}active{% endif %}"
                        href="{{ url_for('quiz.index') }}">Quiz</a>
                 </li>
@@ -24,8 +16,17 @@
                        href="{{ url_for('quiz.my_sessions') }}">My Sessions</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'about' %}active{% endif %}"
+                       href="{{ url_for('main.about') }}">About</a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link {% if active_page == 'contact' %}active{% endif %}"
                        href="{{ url_for('main.contact') }}">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'help' %}active{% endif %}"
+                       href="{{ url_for('main.help') }}">Help</a>
                 </li>
             </ul>
             <ul class="navbar-nav">

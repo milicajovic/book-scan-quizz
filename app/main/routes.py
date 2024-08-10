@@ -17,6 +17,10 @@ def tts_experiment():
 def about():
     return render_template('main/about.html')
 
+@main.route('/help')
+def help():
+    return render_template('main/help.html')
+
 @main.route('/contact')
 def contact():
     return render_template('main/contact.html')
