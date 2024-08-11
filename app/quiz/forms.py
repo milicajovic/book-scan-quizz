@@ -4,19 +4,28 @@ from wtforms.validators import DataRequired, Optional
 from flask_wtf.file import FileAllowed, FileRequired
 from ..models.models import QuizType
 
+def get_language_choices():
+    return [
+        ('en', 'English'),
+        ('de', 'German'),
+        ('fr', 'French'),
+        ('hr', 'Croatian'),
+        ('sr', 'Serbian')
+    ]
+
 class CreateQuizForm(FlaskForm):
-    title = StringField('Quiz Title', validators=[DataRequired()])
-    lng = StringField('Quiz Language')
-    type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], default='QUESTIONS', validators=[DataRequired()])
+    title = StringField('Quiz Title', validators=[Optional()])  # Changed from DataRequired() to Optional()
+    lng = SelectField('Quiz Language', choices=get_language_choices(), validators=[DataRequired()])
+    type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Images', validators=[
-       # FileRequired(),
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
     ])
     submit = SubmitField('Create Quiz')
 
+
 class EditQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
-    lng = StringField('Quiz Language')
+    lng = SelectField('Quiz Language', choices=get_language_choices(), validators=[DataRequired()])
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Additional Images', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
@@ -34,4 +43,3 @@ class QuestionForm(FlaskForm):
     position = IntegerField('Position', validators=[Optional()])
 
     submit = SubmitField('Save Question')
-

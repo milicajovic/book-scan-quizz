@@ -7,8 +7,8 @@ from sqlalchemy.orm import relationship
 from ..extensions import db
 
 class QuizType(Enum):
-    LANGUAGE = "language"
-    QUESTIONS = "questions"
+    LANGUAGE = "Language"
+    QUESTIONS = "Questions"
 
 class Quiz(db.Model):
     __tablename__ = 'quiz'
