@@ -3,26 +3,58 @@
 {% block title %}Contact - AI-Quizzer{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">Contact Us</h1>
+    <div data-canny></div>
+    <script>!function (w, d, i, s) {
+        function l() {
+            if (!d.getElementById(i)) {
+                var f = d.getElementsByTagName(s)[0], e = d.createElement(s);
+                e.type = "text/javascript", e.async = !0, e.src = "https://canny.io/sdk.js", f.parentNode.insertBefore(e, f)
+            }
+        }
 
-    <div class="row">
-        <div class="col-md-8">
-            <p class="lead">If you have any questions or concerns, please don't hesitate to get in touch with us.</p>
-            <p>You can reach us at: <a href="mailto:almir@software-advantage.com">almir@software-advantage.com</a></p>
+        if ("function" != typeof w.Canny) {
+            var c = function () {
+                c.q.push(arguments)
+            };
+            c.q = [], w.Canny = c, "complete" === d.readyState ? l() : w.attachEvent ? w.attachEvent("onload", l) : w.addEventListener("load", l, !1)
+        }
+    }(window, document, "canny-jssdk", "script");</script>
+    <script>
+        Canny('render', {
+            boardToken: '5d9a1be4-f0d1-23a1-93e9-3c7a00c6b84c',
+            basePath: '//contact', // See step 2
+            ssoToken: null, // See step 3,
+            theme: 'light', // options: light [default], dark, auto
+        });
+    </script>
+    <div class="container">
+        <h1 class="mb-4">Contact Us</h1>
+
+        <div class="row">
+            <div class="col-md-8">
+                <p class="lead">If you have any questions or concerns, please don't hesitate to get in touch with
+                    us.</p>
+                <p>You can reach us at: <a href="mailto:almir@software-advantage.com">almir@software-advantage.com</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h2>Privacy Statement</h2>
+            <p>At AI-Quizzer, we take your privacy seriously. Here's what you need to know about how we handle your
+                data:</p>
+            <ul>
+                <li>All data processing occurs on Google Cloud infrastructure.</li>
+                <li>The information you provide is used solely for the purpose of evaluating your questions and
+                    improving our service.
+                </li>
+                <li>We do not share your personal information with third parties.</li>
+                <li>Your data is securely stored and protected in accordance with industry standards.</li>
+            </ul>
+            <p>By using our service, you consent to the collection and use of your information as described above. If
+                you have any questions about our privacy practices, please contact us using the email provided.</p>
         </div>
     </div>
 
-    <div class="mt-5">
-        <h2>Privacy Statement</h2>
-        <p>At AI-Quizzer, we take your privacy seriously. Here's what you need to know about how we handle your data:</p>
-        <ul>
-            <li>All data processing occurs on Google Cloud infrastructure.</li>
-            <li>The information you provide is used solely for the purpose of evaluating your questions and improving our service.</li>
-            <li>We do not share your personal information with third parties.</li>
-            <li>Your data is securely stored and protected in accordance with industry standards.</li>
-        </ul>
-        <p>By using our service, you consent to the collection and use of your information as described above. If you have any questions about our privacy practices, please contact us using the email provided.</p>
-    </div>
-</div>
+
 {% endblock %}
