@@ -31,11 +31,13 @@
 {% block mode_specific_js %}
     <script type="module" src="{{ url_for('static', filename='js/audio_recording.js') }}"></script>
     <script type="module">
-        import initAudioRecording from '/static/js/audio_recording.js';
+        //import initAudioRecording from '/static/js/audio_recording.js';
+        import AudioRecorder from '/static/js/audio_recording.js';
+
 
         const QUESTION_ID = "{{ question.id }}";
         const SESSION_ID = "{{ session_id }}";
 
-        initAudioRecording('{{ url_for("language_practice.evaluate_audio_server") }}', QUESTION_ID, SESSION_ID, true);
+        new AudioRecorder('{{ url_for("language_practice.evaluate_audio_server") }}', QUESTION_ID, SESSION_ID, true);
     </script>
 {% endblock %}

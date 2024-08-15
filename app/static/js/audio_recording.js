@@ -15,6 +15,8 @@ class AudioRecorder {
         this.initElements();
         this.addEventListeners();
         this.useServerTTS = useServerTTS;
+
+        this.log("useServerTTS:" + useServerTTS)
     }
 
     log(message) {
@@ -178,7 +180,7 @@ class AudioRecorder {
         this.resultText.textContent = '';
         this.processingFeedback.style.display = 'block';
         this.recordButton.disabled = true;
-
+        console.log("fetching "+ this.useServerTTS);
         fetch(this.submitUrl, {
             method: 'POST',
             body: formData
@@ -187,6 +189,7 @@ class AudioRecorder {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                console.log("fetched");
                 if (this.useServerTTS) {
                     return response.json();  // Expect JSON with MP3 file URL
                 } else {
@@ -216,9 +219,12 @@ class AudioRecorder {
 
     handleServerTTSResponse(result) {
         this.processingFeedback.style.display = 'none';
+        this.log("got result:" + result)
         if (result.error) {
             this.resultText.textContent = 'Error: ' + result.error;
+            console.error(result.error)
         } else {
+            this.log("playing " + result.audio_file)
             this.resultText.textContent = result.feedback;
             const mp3Url = '/play-audio?file=' + encodeURIComponent(result.audio_file);
             this.playMp3(mp3Url);
@@ -243,4 +249,5 @@ class AudioRecorder {
 
 }
 
-export default (submitUrl, questionId, sessionId) => new AudioRecorder(submitUrl, questionId, sessionId);
+//export default (submitUrl, questionId, sessionId, useServerTTS = false) => new AudioRecorder(submitUrl, questionId, sessionId,  useServerTTS = false  );
+export default AudioRecorder;
