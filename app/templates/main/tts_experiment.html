@@ -50,14 +50,16 @@
 
         const ssml = `
         <speak>
-            <lang xml:lang="en-US">
-                Hello! This is a demonstration of multilingual speech using SSML.
-            </lang>
-            <break time="1s"/>
-            <lang xml:lang="de-DE">
-                Hallo! Dies ist eine Demonstration mehrsprachiger Sprache mit SSML.
-            </lang>
-        </speak>
+  <voice name="Google US English">
+    Hello, this is a message in English.
+  </voice>
+  <voice name="Google Deutsch">
+    Servus, das ist eine Nachricht auf Deutsch
+  </voice>
+  <voice name="Google español">
+    Hola, este es un mensaje en español.
+  </voice>
+</speak>
         `;
 
         document.getElementById('ssmlContent').textContent = ssml;
@@ -67,7 +69,7 @@
             voiceSelect.innerHTML = '';
             voices.forEach((voice, i) => {
                 const option = document.createElement('option');
-                option.textContent = `${voice.name} (${voice.lang})`;
+                option.textContent = `${voice.name}  ## ${voice.voiceURI} `;
                 option.setAttribute('data-lang', voice.lang);
                 option.setAttribute('data-name', voice.name);
                 voiceSelect.appendChild(option);
