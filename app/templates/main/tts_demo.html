@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}TTS Demo - AI-Quizzer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Text-to-Speech Demo</h1>
+    <form id="ttsForm">
+        <div class="mb-3">
+            <label for="ssmlText" class="form-label">Enter SSML:</label>
+            <textarea class="form-control" id="ssmlText" name="ssml_text" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Speech</button>
+    </form>
+    <div id="spinner" class="mt-3 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <span class="ms-2">Generating audio...</span>
+    </div>
+    <audio id="audioPlayer" class="mt-3 d-none" controls></audio>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('ttsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const spinner = document.getElementById('spinner');
+    const audioPlayer = document.getElementById('audioPlayer');
+    
+    spinner.classList.remove('d-none');
+    audioPlayer.classList.add('d-none');
+    
+    fetch('/tts-demo', {
+        method: 'POST',
+        body: new FormData(form)
+    })
+    .then(response => response.json())
+    .then(data => {
+        spinner.classList.add('d-none');
+        audioPlayer.src = '/play-audio?file=' + encodeURIComponent(data.audio_file);
+        audioPlayer.classList.remove('d-none');
+        audioPlayer.play();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        spinner.classList.add('d-none');
+        alert('An error occurred while generating the audio.');
+    });
+});
+</script>
+{% endblock %}

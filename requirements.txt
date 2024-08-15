@@ -17,3 +17,4 @@ Flask-WTF
 gunicorn
 psycopg2-binary
 langcodes
+google-cloud-texttospeech

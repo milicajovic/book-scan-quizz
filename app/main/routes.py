@@ -1,25 +1,33 @@
-from flask import render_template, current_app
-from sqlalchemy import inspect
 import time
-from .. import db
+
+from flask import current_app
+from flask import render_template, request, jsonify, send_file
+from google_ai.tts import generate_speech_from_ssml
+from sqlalchemy import inspect
+
 from . import main
+from .. import db
 
 
 @main.route('/')
 def home():
     return render_template('main/home.html')
 
+
 @main.route('/tts-experiment')
 def tts_experiment():
     return render_template('main/tts_experiment.html')
+
 
 @main.route('/about')
 def about():
     return render_template('main/about.html')
 
+
 @main.route('/help')
 def help():
     return render_template('main/help.html')
+
 
 @main.route('/contact')
 def contact():
@@ -61,3 +69,19 @@ def db_check():
         return render_template('main/db_check.html',
                                connected=False,
                                error=str(e))
+
+
+@main.route('/tts-demo', methods=['GET', 'POST'])
+def tts_demo():
+    if request.method == 'POST':
+        ssml_text = request.form['ssml_text']
+        audio_file_path = generate_speech_from_ssml(ssml_text)
+        return jsonify({'audio_file': audio_file_path})
+
+    return render_template('main/tts_demo.html')
+
+
+@main.route('/play-audio')
+def play_audio():
+    audio_file = request.args.get('file')
+    return send_file(audio_file, mimetype='audio/mp3')
