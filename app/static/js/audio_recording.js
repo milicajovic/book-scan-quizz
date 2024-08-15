@@ -1,19 +1,20 @@
-import TextToSpeech from "./text_to_speech.js";
+import  TtsStreamProcessor  from "./tts_stream_processor.js";
 
 class AudioRecorder {
-    constructor(submitUrl, questionId, sessionId) {
+    constructor(submitUrl, questionId, sessionId, useServerTTS = false) {
         this.submitUrl = submitUrl;
         this.questionId = questionId;
         this.sessionId = sessionId;
         this.mediaRecorder = null;
         this.audioChunks = [];
         this.isRecording = false;
-        this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
+        this.ttsStreamProcessor = new TtsStreamProcessor();
 
         this.loggingEnabled = true; // Set this to false to disable logging
         this.isResetting = false;
         this.initElements();
         this.addEventListeners();
+        this.useServerTTS = useServerTTS;
     }
 
     log(message) {
@@ -141,7 +142,8 @@ class AudioRecorder {
     }
 
     updateDuration() {
-        const duration = Math.floor((Date.now() - this.startTime) / 1000);
+        let duration;
+        duration = Math.floor((Date.now() - this.startTime) / 1000);
         this.recordingDuration.textContent = duration;
     }
 
@@ -185,9 +187,19 @@ class AudioRecorder {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.body.getReader();
+                if (this.useServerTTS) {
+                    return response.json();  // Expect JSON with MP3 file URL
+                } else {
+                    return response.body.getReader();  // For local TTS
+                }
             })
-            .then(reader => this.processStreamResponse(reader))
+            .then(result => {
+                if (this.useServerTTS) {
+                    this.handleServerTTSResponse(result);
+                } else {
+                    this.ttsStreamProcessor.processStreamResponse(result);
+                }
+            })
             .catch(error => {
                 console.error('Error:', error);
                 this.processingFeedback.style.display = 'none';
@@ -202,46 +214,33 @@ class AudioRecorder {
         ;
     }
 
-    processStreamResponse(reader) {
-        const decoder = new TextDecoder();
-
-        const readChunk = () => {
-            reader.read().then(({done, value}) => {
-                if (done) {
-                    this.processingFeedback.style.display = 'none';
-                    this.recordButton.disabled = false;
-                    this.showNextQuestionButton();
-                    this.textToSpeechInstance.finishSpeaking();
-                    return;
-                }
-
-                this.handleStreamChunk(decoder.decode(value, {stream: true}));
-
-                readChunk();
-            }).catch(error => {
-                console.error('Error reading stream:', error);
-                this.processingFeedback.style.display = 'none';
-                this.resultText.textContent += `\nError reading stream: ${error.message}`;
-                this.recordButton.disabled = false;
-            });
-        };
-
-        readChunk();
-    }
-
-    handleStreamChunk(chunk) {
-        this.resultText.textContent += chunk;
-        this.textToSpeechInstance.addToSpeechQueue(chunk); // Call on the instance
-    }
-
-    showNextQuestionButton() {
-        const actionButtons = document.getElementById('actionButtons');
-        if (actionButtons) {
-            actionButtons.classList.remove('d-none');
+    handleServerTTSResponse(result) {
+        this.processingFeedback.style.display = 'none';
+        if (result.error) {
+            this.resultText.textContent = 'Error: ' + result.error;
         } else {
-            console.error('Action buttons container not found');
+            this.resultText.textContent = result.feedback;
+            const mp3Url = '/play-audio?file=' + encodeURIComponent(result.audio_file);
+            this.playMp3(mp3Url);
+        }
+        this.recordButton.disabled = false;
+    }
+
+    playMp3(mp3Url) {
+        const audioPlayer = document.getElementById('audioPlayer');
+        if (audioPlayer) {
+            audioPlayer.src = mp3Url;
+            audioPlayer.style.display = 'block';
+            audioPlayer.play().catch(error => {
+                console.error('Error playing audio:', error);
+                this.resultText.textContent += '\nError playing audio feedback.';
+            });
+        } else {
+            console.error('Audio player element not found');
+            this.resultText.textContent += '\nAudio player not available.';
         }
     }
+
 }
 
 export default (submitUrl, questionId, sessionId) => new AudioRecorder(submitUrl, questionId, sessionId);

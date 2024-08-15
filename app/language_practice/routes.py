@@ -1,7 +1,9 @@
 import html
 import os
 
-from flask import current_app, jsonify, Response, stream_with_context, session, abort
+from google_ai.evaluate_language_audio_ssml import evaluate_language_audio_ssml
+from google_ai.tts import generate_speech_from_ssml
+from flask import current_app, jsonify, Response, stream_with_context, session, abort, send_file
 from flask import make_response
 from flask import render_template, redirect, url_for
 from flask import request
@@ -73,15 +75,15 @@ def start(quiz_id):
     return redirect(url_for('language_practice.answer_question', session_id=new_session.id))
 
 
-@language_practice.route('/update-mode', methods=['POST'])
-@login_required
-def update_mode():
-    data = request.get_json()
-    mode = data.get('mode')
-    if mode in ['audio', 'text']:
-        session['answer_mode'] = mode
-        return jsonify({'status': 'success', 'mode': mode}), 200
-    return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
+# @language_practice.route('/update-mode', methods=['POST'])
+# @login_required
+# def update_mode():
+#     data = request.get_json()
+#     mode = data.get('mode')
+#     if mode in ['audio', 'text']:
+#         session['answer_mode'] = mode
+#         return jsonify({'status': 'success', 'mode': mode}), 200
+#     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
 
 
 @language_practice.route('/answer/<session_id>', methods=['GET', 'POST'])
@@ -93,6 +95,11 @@ def answer_question(session_id):
 
     answered_count = prep_session.get_distinct_answered_questions_count()
     total_count = prep_session.get_total_quiz_questions_count()
+
+    # Handle the set_mode query parameter
+    set_mode = request.args.get('set_mode')
+    if set_mode in ['audio', 'text']:
+        session['answer_mode'] = set_mode
 
     if total_count == 0:
         raise NotFound("This quiz has no questions. Please contact the administrator.")
@@ -106,19 +113,28 @@ def answer_question(session_id):
 
     progress_percentage = (answered_count / total_count) * 100
 
+
     # Use the answer_mode from the session, defaulting to 'audio' if not set
     answer_mode = session.get('answer_mode', 'audio')
 
     # Choose the template based on the answer_mode
-    template = 'language_practice/audio.html'
+    is_server_tts = True
+    if answer_mode == 'audio':
+        is_server_tts = True
+        template = 'language_practice/server_tts.html'
+    else:
+        is_server_tts = False
+        template = 'language_practice/client_tts.html'
 
+    #print("server TTS:" + str(is_server_tts) + " " + answer_mode )
     return render_template(template,
                            question=current_question,
                            session_id=session_id,
                            progress_percentage=progress_percentage,
                            answered_count=answered_count,
                            total_count=total_count,
-                           answer_mode=answer_mode)
+                           answer_mode=answer_mode,
+                           is_server_tts=is_server_tts)
 
 
 @language_practice.route('/complete/<session_id>')
@@ -222,45 +238,67 @@ def evaluate_audio():
     #               current_app.logger.warning(
     #               f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
-
-@language_practice.route('/evaluate_text', methods=['POST'])
+@language_practice.route('/evaluate_audio_server', methods=['POST'])
 @login_required
-def evaluate_text():
+def evaluate_audio_server():
+    audio_file_path = None
     try:
-        text = request.form.get('text')
+        audio_file = request.files.get('audio')
         question_id = request.form.get('question_id')
         session_id = request.form.get('session_id')
 
-        if not text or not question_id or not session_id:
-            return jsonify({'error': 'Missing required data'}), 400
+        question, prep_session = validate_input(audio_file, question_id, session_id, current_user.id)
 
-        question = Question.query.get(question_id)
-        if not question:
-            return jsonify({'error': 'Question not found'}), 404
+        audio_file_path = process_audio_file(audio_file)
+        current_app.logger.info(f"Audio file processed: {audio_file_path}")
 
-        prep_session = PrepSession.query.get(session_id)
-        if not prep_session or prep_session.user_id != current_user.id:
-            return jsonify({'error': 'Invalid session'}), 403
+        ssml = evaluate_language_audio_ssml(
+            user_language=prep_session.lng,
+            target_language=question.quiz.lng,
+            prompt=question.question_text,
+            audio_file=audio_file_path
+        )
 
-        # evaluation_result = evaluate_text_answer(question.question_text, question.answer, text)
-        raise NotImplemented("Not implemented yet")
-        # Extract feedback and scores
-        feedback, correctness, completeness = extract_feedback_and_scores(evaluation_result)
+        mp3_file_path = generate_speech_from_ssml(ssml)
 
-        # Store the answer using the existing store_answer function
+        # Extract feedback and scores from SSML (you might need to implement this function)
+        feedback, correctness, completeness = extract_feedback_and_scores(ssml)
+
         store_answer(
             user_id=current_user.id,
             question_id=question_id,
             prep_session_id=session_id,
-            audio_file_name="not-used",
+            audio_file_name=os.path.basename(audio_file_path),
             feedback=feedback,
             correctness=correctness,
-            completeness=completeness,
-            answer_text=text  # Add this new parameter
+            completeness=completeness
         )
 
-        return evaluation_result
+        return jsonify({
+            'audio_file': mp3_file_path,
+            'feedback': feedback,
+            'correctness': correctness,
+            'completeness': completeness
+        })
 
     except Exception as e:
-        current_app.logger.error(f"Error in evaluate_text: {str(e)}")
-        return jsonify({'error': f'An error occurred while evaluating the answer {str(e)}'}), 500
+        error_message = f"Error in evaluate_audio_server: {str(e)}"
+        current_app.logger.exception(error_message)
+        return jsonify({'error': error_message}), 500
+
+    # finally:
+    #     if audio_file_path and os.path.exists(audio_file_path):
+    #         try:
+    #             os.remove(audio_file_path)
+    #             current_app.logger.info(f"Audio file deleted: {audio_file_path}")
+    #         except Exception as e:
+    #             current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
+
+@language_practice.route('/play-audio')
+def play_audio():
+    audio_file = request.args.get('file')
+    try:
+        return send_file(audio_file, mimetype='audio/mp3')
+    except Exception as e:
+        current_app.logger.error(f"Audio playback failed: {str(e)}")
+        return jsonify({'error': 'Audio playback failed. Tough luck.'}), 500

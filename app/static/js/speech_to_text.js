@@ -1,5 +1,4 @@
 import LanguageUtils from './language_utils.js';
-import TextToSpeech from './text_to_speech.js';
 
 class SpeechRecognitionHandler {
     constructor(submitUrl, questionId, sessionId) {
@@ -15,7 +14,7 @@ class SpeechRecognitionHandler {
         this.processingFeedback = document.getElementById('processingFeedback');
         this.actionButtons = document.getElementById('actionButtons');
         this.loggingEnabled = false; // Set this to false to disable logging
-        this.textToSpeechInstance = TextToSpeech.getInstance(); // Ensure we use an instance
+        this.textToSpeechInstance = TextToSpeechEngine.getInstance(); // Ensure we use an instance
 
         this.setupRecognition();
         this.addRecordButtonListeners();

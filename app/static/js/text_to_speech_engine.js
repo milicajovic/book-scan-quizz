@@ -2,7 +2,7 @@
 import LanguageUtils from "./language_utils.js";
 import LanguagePreferenceSender from "./language_preference_sender.js";
 
-class TextToSpeech {
+class TextToSpeechEngine {
     constructor() {
         //this.sessionId = sessionId;
         this.speechSynthesis = window.speechSynthesis;
@@ -18,13 +18,13 @@ class TextToSpeech {
 
     static getInstance() {
 
-        if (!TextToSpeech.instance) {
-            TextToSpeech.instance = new TextToSpeech();
-            TextToSpeech.instance.log("getInstance")
+        if (!TextToSpeechEngine.instance) {
+            TextToSpeechEngine.instance = new TextToSpeechEngine();
+            TextToSpeechEngine.instance.log("getInstance")
         } else {
-            TextToSpeech.instance.log("getInstance - cached")
+            TextToSpeechEngine.instance.log("getInstance - cached")
         }
-        return TextToSpeech.instance;
+        return TextToSpeechEngine.instance;
     }
 
     log(message) {
@@ -328,4 +328,4 @@ class TextToSpeech {
     }
 }
 
-export default TextToSpeech;
+export default TextToSpeechEngine;

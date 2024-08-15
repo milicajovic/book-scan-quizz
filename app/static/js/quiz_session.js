@@ -1,5 +1,5 @@
 import QuizSessionTTS from './quiz_session_tts.js';
-import TextToSpeech from './text_to_speech.js';
+import TextToSpeechEngine from "./text_to_speech_engine.js";
 
 class QuizSession {
     constructor() {
@@ -52,8 +52,8 @@ class QuizSession {
         this.recordButton.disabled = false;
 
         // Stop any ongoing TTS
-        if (TextToSpeech.isInitialized()) {
-            TextToSpeech.stopSpeaking();
+        if (TextToSpeechEngine.isInitialized()) {
+            TextToSpeechEngine.stopSpeaking();
         }
     }
 

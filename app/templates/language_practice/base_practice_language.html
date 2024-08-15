@@ -57,6 +57,18 @@
         {% block tts_controls %}
             <!-- Mode Toggle Switch -->
             <input type="hidden" id="session-id" value="{{ session_id }}">
+            <!-- Mode Toggle Switch -->
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="mode-toggle" {% if not is_server_tts %}checked{% endif %} >
+            <label class="form-check-label" for="mode-toggle">
+                {% if is_server_tts %}
+                    Switch to Client voice generation
+                {% else %}
+                    Switch to Server voice Mode
+                {% endif %}
+            </label>
+            </div>
+
 
 
             <div id="tts-controls" class="mb-4">
@@ -104,7 +116,7 @@
 
 {% block extra_js %}
     <script type="module" src="{{ url_for('static', filename='js/language_utils.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/text_to_speech.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/text_to_speech_engine.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/speech_to_text.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/quiz_session_tts.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/quiz_session.js') }}"></script>
@@ -112,7 +124,7 @@
 
     <script type="module">
 
-        import TextToSpeech from '/static/js/text_to_speech.js';
+        import TextToSpeech from '/static/js/text_to_speech_engine.js';
         import QuizSessionTTS from '/static/js/quiz_session_tts.js';
 
         const QUESTION_ID = "{{ question.id }}";

@@ -1,4 +1,4 @@
-import TextToSpeech from './text_to_speech.js';
+import TextToSpeechEngine from "./text_to_speech_engine.js";
 
 class QuizSessionTTS {
     constructor() {
@@ -14,7 +14,7 @@ class QuizSessionTTS {
     async init() {
         this.log('Initializing QuizSessionTTS');
         try {
-            const textToSpeechInstance = TextToSpeech.getInstance();
+            const textToSpeechInstance = TextToSpeechEngine.getInstance();
             await textToSpeechInstance.init();
 
             const autoReadEnabled = this.checkAutoReadState();
@@ -34,7 +34,7 @@ class QuizSessionTTS {
     readQuestionText() {
         const questionText = document.getElementById('question-text')?.textContent;
         this.log(`Question text: ${questionText}`);
-        const textToSpeechInstance = TextToSpeech.getInstance();
+        const textToSpeechInstance = TextToSpeechEngine.getInstance();
         if (questionText && textToSpeechInstance.isInitialized) {
             this.log('Reading question aloud');
             textToSpeechInstance.speakWithoutBuffering(questionText);
