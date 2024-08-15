@@ -8,7 +8,19 @@
     <form id="ttsForm">
         <div class="mb-3">
             <label for="ssmlText" class="form-label">Enter SSML:</label>
-            <textarea class="form-control" id="ssmlText" name="ssml_text" rows="5" required></textarea>
+            <textarea class="form-control" id="ssmlText" name="ssml_text" rows="10" required>
+<speak>
+  <voice name="en-US-Standard-C">
+    Hello, this is a message in English.
+  </voice>
+  <voice name="de-DE-Standard-C">
+    Servus, das ist eine Nachricht auf Deutsch
+  </voice>
+  <voice name="es-ES-Standard-C">
+    Hola, este es un mensaje en español.
+  </voice>
+</speak>
+            </textarea>
         </div>
         <button type="submit" class="btn btn-primary">Generate Speech</button>
     </form>
@@ -19,37 +31,13 @@
         <span class="ms-2">Generating audio...</span>
     </div>
     <audio id="audioPlayer" class="mt-3 d-none" controls></audio>
+    <div id="errorMessage" class="alert alert-danger mt-3 d-none"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.getElementById('ttsForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const form = this;
-    const spinner = document.getElementById('spinner');
-    const audioPlayer = document.getElementById('audioPlayer');
-    
-    spinner.classList.remove('d-none');
-    audioPlayer.classList.add('d-none');
-    
-    fetch('/tts-demo', {
-        method: 'POST',
-        body: new FormData(form)
-    })
-    .then(response => response.json())
-    .then(data => {
-        spinner.classList.add('d-none');
-        audioPlayer.src = '/play-audio?file=' + encodeURIComponent(data.audio_file);
-        audioPlayer.classList.remove('d-none');
-        audioPlayer.play();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        spinner.classList.add('d-none');
-        alert('An error occurred while generating the audio.');
-    });
-});
+<script type="module">
+    import { ServerTTS } from '/static/js/server-tts.js';
+    new ServerTTS();
 </script>
 {% endblock %}

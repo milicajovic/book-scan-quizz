@@ -75,8 +75,12 @@ def db_check():
 def tts_demo():
     if request.method == 'POST':
         ssml_text = request.form['ssml_text']
-        audio_file_path = generate_speech_from_ssml(ssml_text)
-        return jsonify({'audio_file': audio_file_path})
+        try:
+            audio_file_path = generate_speech_from_ssml(ssml_text)
+            return jsonify({'audio_file': audio_file_path})
+        except Exception as e:
+            current_app.logger.error(f"TTS failed: {str(e)}")
+            return jsonify({'error': f'TTS failed. {str(e)}'}), 500
 
     return render_template('main/tts_demo.html')
 
@@ -84,4 +88,8 @@ def tts_demo():
 @main.route('/play-audio')
 def play_audio():
     audio_file = request.args.get('file')
-    return send_file(audio_file, mimetype='audio/mp3')
+    try:
+        return send_file(audio_file, mimetype='audio/mp3')
+    except Exception as e:
+        current_app.logger.error(f"Audio playback failed: {str(e)}")
+        return jsonify({'error': 'Audio playback failed. Tough luck.'}), 500
