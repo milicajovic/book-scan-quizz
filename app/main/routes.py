@@ -1,25 +1,36 @@
+import time
+
 from flask import render_template, current_app
 from sqlalchemy import inspect
-import time
-from .. import db
+
 from . import main
+from .. import db
 
 
 @main.route('/')
 def home():
     return render_template('main/home.html')
 
+
+@main.route('/feedback')
+def feedback():
+    return render_template('main/feedback.html')
+
+
 @main.route('/tts-experiment')
 def tts_experiment():
     return render_template('main/tts_experiment.html')
+
 
 @main.route('/about')
 def about():
     return render_template('main/about.html')
 
+
 @main.route('/help')
 def help():
     return render_template('main/help.html')
+
 
 @main.route('/contact')
 def contact():

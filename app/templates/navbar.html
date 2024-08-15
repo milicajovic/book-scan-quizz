@@ -28,6 +28,11 @@
                     <a class="nav-link {% if active_page == 'help' %}active{% endif %}"
                        href="{{ url_for('main.help') }}">Help</a>
                 </li>
+                <!-- New Feedback link -->
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'feedback' %}active{% endif %}"
+                       href="{{ url_for('main.feedback') }}">Feedback</a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 {% if current_user.is_authenticated %}
