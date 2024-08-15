@@ -1,4 +1,4 @@
-import  TtsStreamProcessor  from "./tts_stream_processor.js";
+import TtsStreamProcessor from "./tts_stream_processor.js";
 
 class AudioRecorder {
     constructor(submitUrl, questionId, sessionId, useServerTTS = false) {
@@ -180,14 +180,16 @@ class AudioRecorder {
         this.resultText.textContent = '';
         this.processingFeedback.style.display = 'block';
         this.recordButton.disabled = true;
-        console.log("fetching "+ this.useServerTTS);
+        console.log("fetching " + this.useServerTTS);
         fetch(this.submitUrl, {
             method: 'POST',
             body: formData
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json().then(errorData => {
+                        throw errorData; // This preserves the server's error message
+                    });
                 }
                 console.log("fetched");
                 if (this.useServerTTS) {
@@ -204,9 +206,9 @@ class AudioRecorder {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Caught Error:', error);
                 this.processingFeedback.style.display = 'none';
-                this.resultText.textContent = 'Error: ' + error.message;
+                this.resultText.textContent = 'Error: ' + (error.error || error.message || 'Unknown error');
                 this.resultText.style.color = 'red';
                 this.recordButton.disabled = false;
             })
@@ -221,7 +223,7 @@ class AudioRecorder {
         this.processingFeedback.style.display = 'none';
         this.log("got result:" + result)
         if (result.error) {
-            this.resultText.textContent = 'Error: ' + result.error;
+            this.resultText.textContent = 'XXX Error: ' + result.error;
             console.error(result.error)
         } else {
             this.log("playing " + result.audio_file)

@@ -258,7 +258,7 @@ def evaluate_audio_server():
             prompt=question.question_text,
             audio_file=audio_file_path
         )
-
+        print(ssml)
         mp3_file_path = generate_speech_from_ssml(ssml)
 
         # Extract feedback and scores from SSML (you might need to implement this function)
