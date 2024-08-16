@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - AI-Quizzer{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mt-4 mb-4">Feedback</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Join Our Discord</h2>
+                <p>Found an issue, got questions or ideas? Join our Discord server!</p>
+                <a href="https://discord.gg/xnWYv82Z" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-discord me-2"></i>Join Discord
+                </a>
+            </div>
+
+            <div class="col-md-6">
+                <h2>Suggest a Feature</h2>
+                <div data-canny></div>
+                <script>!function (w, d, i, s) {
+                    function l() {
+                        if (!d.getElementById(i)) {
+                            var f = d.getElementsByTagName(s)[0], e = d.createElement(s);
+                            e.type = "text/javascript", e.async = !0, e.src = "https://canny.io/sdk.js", f.parentNode.insertBefore(e, f)
+                        }
+                    }
+
+                    if ("function" != typeof w.Canny) {
+                        var c = function () {
+                            c.q.push(arguments)
+                        };
+                        c.q = [], w.Canny = c, "complete" === d.readyState ? l() : w.attachEvent ? w.attachEvent("onload", l) : w.addEventListener("load", l, !1)
+                    }
+                }(window, document, "canny-jssdk", "script");</script>
+                <script>
+                    Canny('render', {
+                        boardToken: '5d9a1be4-f0d1-23a1-93e9-3c7a00c6b84c',
+                        basePath: '//feedback', // See step 2
+                        ssoToken: null, // See step 3,
+                        theme: 'light', // options: light [default], dark, auto
+                    });
+                </script>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+    </script>
+{% endblock %}
