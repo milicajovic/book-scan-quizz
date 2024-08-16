@@ -222,11 +222,13 @@ class AudioRecorder {
     handleServerTTSResponse(result) {
         this.processingFeedback.style.display = 'none';
         this.log("got result:" + result)
+        this.showNextQuestionButton();
         if (result.error) {
             this.resultText.textContent = 'XXX Error: ' + result.error;
             console.error(result.error)
         } else {
             this.log("playing " + result.audio_file)
+
             this.resultText.textContent = result.feedback;
             const mp3Url = '/play-audio?file=' + encodeURIComponent(result.audio_file);
             this.playMp3(mp3Url);
@@ -246,6 +248,14 @@ class AudioRecorder {
         } else {
             console.error('Audio player element not found');
             this.resultText.textContent += '\nAudio player not available.';
+        }
+    }
+    showNextQuestionButton() {
+        const actionButtons = document.getElementById('actionButtons');
+        if (actionButtons) {
+            actionButtons.classList.remove('d-none');
+        } else {
+            console.error('Action buttons container not found');
         }
     }
 
