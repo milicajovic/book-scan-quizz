@@ -1,4 +1,5 @@
 import TextToSpeechEngine from "./text_to_speech_engine.js";
+import quizSessionInstance from './quiz_session.js';
 
 
 class TtsStreamProcessor {
@@ -54,12 +55,7 @@ class TtsStreamProcessor {
     }
 
     showNextQuestionButton() {
-        const actionButtons = document.getElementById('actionButtons');
-        if (actionButtons) {
-            actionButtons.classList.remove('d-none');
-        } else {
-            console.error('Action buttons container not found');
-        }
+        quizSessionInstance.showActionButtons();
     }
 }
 

@@ -1,4 +1,5 @@
 import TtsStreamProcessor from "./tts_stream_processor.js";
+import quizSessionInstance from './quiz_session.js';
 
 class AudioRecorder {
     constructor(submitUrl, questionId, sessionId, useServerTTS = false) {
@@ -251,12 +252,7 @@ class AudioRecorder {
         }
     }
     showNextQuestionButton() {
-        const actionButtons = document.getElementById('actionButtons');
-        if (actionButtons) {
-            actionButtons.classList.remove('d-none');
-        } else {
-            console.error('Action buttons container not found');
-        }
+        quizSessionInstance.showActionButtons();
     }
 
 }
