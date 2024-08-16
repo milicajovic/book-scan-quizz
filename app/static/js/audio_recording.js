@@ -230,7 +230,19 @@ class AudioRecorder {
         } else {
             this.log("playing " + result.audio_file)
 
-            this.resultText.textContent = result.feedback;
+              // Display feedback
+            this.resultText.innerHTML = `<p>${result.feedback}</p>`;
+
+            // Display scores
+            const scoresHtml = `
+                <div class="mt-3">
+                    <h4>Scores:</h4>
+                    <p>Pronunciation: ${result.pronunciation}/10</p>
+                    <p>Grammar: ${result.grammar}/10</p>
+                    <p>Content: ${result.content}/10</p>
+                </div>
+            `;
+            this.resultText.innerHTML += scoresHtml;
             const mp3Url = '/play-audio?file=' + encodeURIComponent(result.audio_file);
             this.playMp3(mp3Url);
         }

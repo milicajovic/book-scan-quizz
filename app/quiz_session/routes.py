@@ -360,8 +360,15 @@ def evaluate_text():
         return jsonify({'error': f'An error occurred while evaluating the answer {str(e)}'}), 500
 
 
-def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedback, correctness,
-                 completeness, answer_text="not-transcribed"):
+def store_answer(user_id, question_id, prep_session_id, audio_file_name,
+                 feedback,
+                 correctness=None,
+                 completeness=None,
+                 answer_text="not-transcribed",
+                 pronunciation=None,
+                 grammar=None,
+                 content=None
+                 ):
     answer = Answer(
         user_id=user_id,
         question_id=question_id,
@@ -370,7 +377,8 @@ def store_answer(user_id, question_id, prep_session_id, audio_file_name, feedbac
         audio_file_name=audio_file_name,
         feedback=feedback,
         correctness=correctness,
-        completeness=completeness
+        completeness=completeness,
+
     )
     db.session.add(answer)
     db.session.commit()

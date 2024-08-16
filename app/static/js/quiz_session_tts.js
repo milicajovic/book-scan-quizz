@@ -61,7 +61,7 @@ class QuizSessionTTS {
                     this.readQuestionText();
                 } else {
                     this.log('Stopping speech');
-                    const textToSpeechInstance = TextToSpeech.getInstance();
+                    const textToSpeechInstance = TextToSpeechEngine.getInstance();
                     textToSpeechInstance.stopSpeaking();
                 }
             });

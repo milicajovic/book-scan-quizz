@@ -1,6 +1,6 @@
 import html
 import os
-
+import re
 from google_ai.evaluate_language_audio_ssml import evaluate_language_audio_ssml
 from google_ai.tts import generate_speech_from_ssml
 from flask import current_app, jsonify, Response, stream_with_context, session, abort, send_file
@@ -238,6 +238,12 @@ def evaluate_audio():
     #               current_app.logger.warning(
     #               f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
 
+def strip_ssml(ssml_text):
+    # Remove all XML tags
+    text = re.sub('<[^<]+>', '', ssml_text)
+    # Remove extra whitespace
+    text = ' '.join(text.split())
+    return text.strip()
 @language_practice.route('/evaluate_audio_server', methods=['POST'])
 @login_required
 def evaluate_audio_server():
@@ -259,26 +265,32 @@ def evaluate_audio_server():
             audio_file=audio_file_path
         )
         print(ssml)
-        mp3_file_path = generate_speech_from_ssml(ssml)
 
-        # Extract feedback and scores from SSML (you might need to implement this function)
-        feedback, correctness, completeness = extract_feedback_and_scores(ssml)
+        # Strip SSML tags for plain text
+        plain_text = strip_ssml(ssml)
+
+        # Extract feedback and scores from plain text
+        feedback, pronunciation, grammar, content = extract_scores(plain_text)
 
         store_answer(
             user_id=current_user.id,
             question_id=question_id,
             prep_session_id=session_id,
             audio_file_name=os.path.basename(audio_file_path),
-            feedback=feedback,
-            correctness=correctness,
-            completeness=completeness
+            feedback=plain_text,
+            pronunciation=pronunciation,
+            grammar=grammar,
+            content=content
         )
+
+        mp3_file_path = generate_speech_from_ssml(ssml)
 
         return jsonify({
             'audio_file': mp3_file_path,
-            'feedback': feedback,
-            'correctness': correctness,
-            'completeness': completeness
+            'feedback': plain_text,
+            'pronunciation': pronunciation,
+            'grammar': grammar,
+            'content': content
         })
 
     except Exception as e:
@@ -294,6 +306,29 @@ def evaluate_audio_server():
     #         except Exception as e:
     #             current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
 
+
+def extract_scores(plain_text):
+    # Split the text into feedback and scores
+    parts = plain_text.split('###')
+    feedback = parts[0].strip()
+
+    # Extract scores using regex
+    score_text = parts[1] if len(parts) > 1 else ""
+    pronunciation = grammar = content = 0
+
+    pronunciation_match = re.search(r'Pronunciation:\s*(\d+)', score_text)
+    if pronunciation_match:
+        pronunciation = int(pronunciation_match.group(1))
+
+    grammar_match = re.search(r'Grammar:\s*(\d+)', score_text)
+    if grammar_match:
+        grammar = int(grammar_match.group(1))
+
+    content_match = re.search(r'Content:\s*(\d+)', score_text)
+    if content_match:
+        content = int(content_match.group(1))
+
+    return feedback, pronunciation, grammar, content
 @language_practice.route('/play-audio')
 def play_audio():
     audio_file = request.args.get('file')
