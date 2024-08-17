@@ -60,6 +60,11 @@ class Answer(db.Model):
     correctness = db.Column(db.Float)
     completeness = db.Column(db.Float)
 
+    # fields for language evaluation scores
+    pronunciation_score = db.Column(db.Float)
+    grammar_score = db.Column(db.Float)
+    content_score = db.Column(db.Float)
+
     user = db.relationship("User", back_populates="answers")
     question = db.relationship("Question", back_populates="answers")
     prep_session = db.relationship("PrepSession", back_populates="answers")

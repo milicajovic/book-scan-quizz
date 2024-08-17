@@ -18,6 +18,7 @@ from ..language_utils import get_language_from_headers
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
 from ..quiz_session.routes import store_answer, extract_feedback_and_scores, validate_input, process_audio_file
+from ..utils import filter_feedback_stream
 
 
 # from google_ai import evaluate_text_answer, evaluate_audio_answer
@@ -49,7 +50,7 @@ def practice():
     db.session.add(new_session)
     db.session.commit()
 
-    return redirect(url_for('quiz_session.answer_question', session_id=new_session.id))
+    return redirect(url_for('language_practice.answer_question', session_id=new_session.id))
 
 
 @language_practice.route('/start/<quiz_id>')
@@ -105,7 +106,7 @@ def answer_question(session_id):
         raise NotFound("This quiz has no questions. Please contact the administrator.")
 
     if answered_count >= total_count:
-        return redirect(url_for('quiz_session.complete', session_id=session_id))
+        return redirect(url_for('language_practice.complete', session_id=session_id))
 
     current_question = prep_session.get_current_question()
     if not current_question:
@@ -191,9 +192,9 @@ def generate_audio_evaluation(question, audio_file_path, prep_session):
             full_response += chunk
             yield chunk
 
-        feedback, correctness, completeness = extract_feedback_and_scores(full_response)
+        feedback, pronunciation, grammar, content = extract_lng_scores(full_response)
         store_answer(prep_session.user_id, question.id, prep_session.id, os.path.basename(audio_file_path),
-                     feedback, correctness, completeness)
+                     feedback,  pronunciation=pronunciation, grammar=grammar, content=content)
 
     finally:
 
@@ -219,11 +220,9 @@ def evaluate_audio():
         audio_file_path = process_audio_file(audio_file)
         current_app.logger.info(f"Audio file processed: {audio_file_path}")
 
-        return Response(
-            stream_with_context(generate_audio_evaluation(
-                question, audio_file_path, prep_session)),
-            content_type='text/plain'
-        )
+        eval_gen = generate_audio_evaluation(question, audio_file_path, prep_session)
+        filtered_gen = filter_feedback_stream(eval_gen)
+        return Response(stream_with_context(filtered_gen), content_type='text/plain')
 
     except Exception as e:
         error_message = f"Error in evaluate_audio: {str(e)}"
@@ -270,7 +269,7 @@ def evaluate_audio_server():
         plain_text = strip_ssml(ssml)
 
         # Extract feedback and scores from plain text
-        feedback, pronunciation, grammar, content = extract_scores(plain_text)
+        feedback, pronunciation, grammar, content = extract_lng_scores(plain_text)
 
         store_answer(
             user_id=current_user.id,
@@ -283,11 +282,13 @@ def evaluate_audio_server():
             content=content
         )
 
-        mp3_file_path = generate_speech_from_ssml(ssml)
+        # Clean the SSML before generating speech
+        cleaned_ssml = remove_scoring_from_ssml(ssml)
+        mp3_file_path = generate_speech_from_ssml(cleaned_ssml)
 
         return jsonify({
             'audio_file': mp3_file_path,
-            'feedback': plain_text,
+            'feedback': feedback,
             'pronunciation': pronunciation,
             'grammar': grammar,
             'content': content
@@ -307,7 +308,7 @@ def evaluate_audio_server():
     #             current_app.logger.warning(f"Failed to delete audio file {audio_file_path}: {str(e)}")
 
 
-def extract_scores(plain_text):
+def extract_lng_scores(plain_text):
     # Split the text into feedback and scores
     parts = plain_text.split('###')
     feedback = parts[0].strip()
@@ -337,3 +338,15 @@ def play_audio():
     except Exception as e:
         current_app.logger.error(f"Audio playback failed: {str(e)}")
         return jsonify({'error': 'Audio playback failed. Tough luck.'}), 500
+
+def remove_scoring_from_ssml(ssml):
+    # Find the position of '###'
+    score_start = ssml.find('###')
+    if score_start != -1:
+        # Find the position of the next '<' after '###'
+        speak_start = ssml.find('<', score_start)
+        if speak_start != -1:
+            # Remove the scoring part
+            return ssml[:score_start] + ssml[speak_start:]
+    # If '###' or '<' not found, return original SSML
+    return ssml

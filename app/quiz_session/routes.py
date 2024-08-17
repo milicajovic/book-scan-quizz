@@ -13,12 +13,12 @@ from werkzeug.exceptions import NotFound
 from werkzeug.utils import secure_filename
 
 from google_ai import evaluate_text_answer, evaluate_audio_answer
-
 from . import quiz_session
 from .. import db
 from ..language_utils import get_language_from_headers, get_language_code
 from ..models import Question, PrepSession, Answer
 from ..models import Quiz
+from ..utils import filter_feedback_stream
 
 
 @quiz_session.route('/set-language', methods=['POST'])
@@ -40,6 +40,8 @@ def set_language():
     db.session.commit()
 
     return jsonify({'success': True})
+
+
 @quiz_session.route('/start/<quiz_id>')
 @login_required
 def start(quiz_id):
@@ -71,6 +73,7 @@ def update_mode():
         session['answer_mode'] = mode
         return jsonify({'status': 'success', 'mode': mode}), 200
     return jsonify({'status': 'error', 'message': 'Invalid mode'}), 400
+
 
 @quiz_session.route('/answer/<session_id>', methods=['GET', 'POST'])
 @login_required
@@ -121,7 +124,6 @@ def answer_question(session_id):
                            )
 
 
-
 @quiz_session.route('/complete/<session_id>')
 @login_required
 def complete(session_id):
@@ -139,9 +141,9 @@ def complete(session_id):
         db.session.commit()
 
     # Fetch all answers with their related questions, ordered by question position
-    answers = Answer.query.join(Question)\
-        .filter(Answer.prep_session_id == prep_session.id)\
-        .order_by(Question.position, Answer.id)\
+    answers = Answer.query.join(Question) \
+        .filter(Answer.prep_session_id == prep_session.id) \
+        .order_by(Question.position, Answer.id) \
         .all()
 
     response = make_response(render_template('quiz_session/complete.html',
@@ -150,6 +152,7 @@ def complete(session_id):
                                              answered_questions_count=answered_questions_count,
                                              total_questions_count=total_questions_count))
     return response
+
 
 def validate_input(audio_file, question_id, session_id, current_user_id):
     if not audio_file or not question_id or not session_id:
@@ -295,12 +298,9 @@ def evaluate_audio():
         audio_file_path = process_audio_file(audio_file)
         current_app.logger.info(f"Audio file processed: {audio_file_path}")
 
-        return Response(
-            stream_with_context(generate_audio_evaluation(
-                question, audio_file_path, current_user.id, prep_session.id
-            )),
-            content_type='text/plain'
-        )
+        evaluation_gen = generate_audio_evaluation(question, audio_file_path, current_user.id, prep_session.id)
+        filtered_stream = filter_feedback_stream(evaluation_gen)
+        return Response(stream_with_context(filtered_stream), content_type='text/plain')
 
     except Exception as e:
         error_message = f"Error in evaluate_audio: {str(e)}"
@@ -313,8 +313,6 @@ def evaluate_audio():
     #             current_app.logger.info(f"Audio file deleted in finally block: {audio_file_path}")
     #         except Exception as e:
     #             current_app.logger.warning(f"Failed to delete audio file in finally block {audio_file_path}: {str(e)}")
-
-
 
 
 @quiz_session.route('/evaluate_text', methods=['POST'])
@@ -378,6 +376,9 @@ def store_answer(user_id, question_id, prep_session_id, audio_file_name,
         feedback=feedback,
         correctness=correctness,
         completeness=completeness,
+        pronunciation_score=pronunciation,
+        grammar_score=grammar,
+        content_score=content
 
     )
     db.session.add(answer)

@@ -33,36 +33,27 @@
             <p class="card-text"><strong>Your Answer:</strong> {{ answer.answer_text }}</p>
             <p class="card-text"><strong>Feedback:</strong> {{ answer.feedback }}</p>
             <div class="row">
-                <div class="col-md-6">
-                    <p class="card-text">
-                        <strong>Completeness:</strong>
-                        {% if answer.completeness is not none %}
+                {% for score_type, score_value in [
+                    ('Pronunciation', answer.pronunciation_score),
+                    ('Grammar', answer.grammar_score),
+                    ('Content', answer.content_score)
+                ] %}
+                    <div class="col-md-4 mb-2">
+                        <p class="card-text">
+                            <strong>{{ score_type }}:</strong>
                             <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: {{ answer.completeness * 10 }}%;"
-                                     aria-valuenow="{{ answer.completeness }}" aria-valuemin="0" aria-valuemax="10">
-                                    {{ answer.completeness }}/10
+                                <div class="progress-bar bg-{{ loop.cycle('info', 'success', 'warning') }}"
+                                     role="progressbar"
+                                     style="width: {{ (score_value or 0) * 10 }}%;"
+                                     aria-valuenow="{{ score_value or 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="10">
+                                    {{ "%.1f"|format(score_value or 0) }}/10
                                 </div>
                             </div>
-                        {% else %}
-                            <span class="text-muted">Not evaluated</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <p class="card-text">
-                        <strong>Correctness:</strong>
-                        {% if answer.correctness is not none %}
-                            <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ answer.correctness * 10 }}%;"
-                                     aria-valuenow="{{ answer.correctness }}" aria-valuemin="0" aria-valuemax="10">
-                                    {{ answer.correctness }}/10
-                                </div>
-                            </div>
-                        {% else %}
-                            <span class="text-muted">Not evaluated</span>
-                        {% endif %}
-                    </p>
-                </div>
+                        </p>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>
