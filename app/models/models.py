@@ -18,6 +18,7 @@ class Quiz(db.Model):
     title = Column(String(255))
     created_date = Column(DateTime, default=func.now())
     lng = Column(String(50))
+    target_lng = Column(String(50))  # New field for target language
     type = Column(String(20), nullable=False, default='QUESTIONS')
 
     owner = relationship("User", back_populates="quizzes")
@@ -25,10 +26,11 @@ class Quiz(db.Model):
     page_scans = relationship("PageScan", back_populates="quiz")
     prep_sessions = relationship("PrepSession", back_populates="quiz")
 
-    def __init__(self, title, user_owner_id, lng=None, type=QuizType.QUESTIONS):
+    def __init__(self, title, user_owner_id, lng=None, target_lng=None, type=QuizType.QUESTIONS):
         self.title = title
         self.user_owner_id = user_owner_id
         self.lng = lng
+        self.target_lng = target_lng
         self.type = type
 
 class Question(db.Model):
@@ -80,6 +82,7 @@ class PrepSession(db.Model):
     status = db.Column(db.String(20))
     score = db.Column(db.Float)
     lng = db.Column(db.String(50))
+
 
     user = db.relationship("User", back_populates="prep_sessions")
     quiz = db.relationship("Quiz", back_populates="prep_sessions")

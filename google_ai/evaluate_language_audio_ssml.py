@@ -50,6 +50,10 @@ Ensure that you use appropriate voice names for each language. Common voice name
 - German: de-DE-Standard-A
 - French: fr-FR-Standard-A
 - Spanish: es-ES-Standard-A
+- Serbian: sr-RS-Standard-A
+- Croatian: sr-RS-Standard-A
+- Hrvatski: sr-RS-Standard-A
+- Spanish: es-ES-Standard-A
 """
 
 

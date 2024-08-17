@@ -3,6 +3,27 @@ import tempfile
 import logging
 
 
+def replace_unsupported_voices(text: str) -> str:
+    """
+    Replace all occurrences of unsupported voice names with supported alternatives in the given text.
+
+    Args:
+    text (str): The input text containing voice names.
+
+    Returns:
+    str: The text with all unsupported voice names replaced by their alternatives.
+    """
+    voice_replacements = {
+        'hr-HR-Standard-A': 'sr-RS-Standard-A',
+        # Add more replacements here as needed
+    }
+
+    for unsupported, supported in voice_replacements.items():
+        text = text.replace(unsupported, supported)
+
+    return text
+
+
 def generate_speech_from_ssml(ssml_text):
     """
     Generate speech from SSML text using Google Cloud Text-to-Speech API.
@@ -18,7 +39,7 @@ def generate_speech_from_ssml(ssml_text):
     """
     try:
         client = texttospeech.TextToSpeechClient()
-
+        ssml_text = replace_unsupported_voices(ssml_text)
         synthesis_input = texttospeech.SynthesisInput(ssml=ssml_text)
         voice = texttospeech.VoiceSelectionParams(
             language_code="en-US",

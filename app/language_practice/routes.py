@@ -168,13 +168,13 @@ def complete(session_id):
     return response
 
 
-def generate_evaluation(question, audio_file_path,  user_language):
+def generate_evaluation(question, audio_file_path,  user_language, target_language):
     if not os.path.exists(audio_file_path):
         yield html.escape(f"Error: Audio file not found: {audio_file_path}")
         return
 
     try:
-        for chunk in evaluate_language_audio(user_language, question.quiz.lng,
+        for chunk in evaluate_language_audio(user_language, target_language,
                                              question.question_text,
                                              audio_file_path):
             yield chunk
@@ -186,9 +186,11 @@ def generate_evaluation(question, audio_file_path,  user_language):
 
 def generate_audio_evaluation(question, audio_file_path, prep_session):
     full_response = ""
+    quiz = Quiz.query.get(prep_session.quiz_id)
 
     try:
-        for chunk in generate_evaluation(question, audio_file_path, user_language=prep_session.lng):
+        for chunk in generate_evaluation(question, audio_file_path, user_language=quiz.lng,
+                                         target_language=quiz.target_lng):
             full_response += chunk
             yield chunk
 
@@ -257,9 +259,11 @@ def evaluate_audio_server():
         audio_file_path = process_audio_file(audio_file)
         current_app.logger.info(f"Audio file processed: {audio_file_path}")
 
+        quiz = Quiz.query.get(prep_session.quiz_id)
+
         ssml = evaluate_language_audio_ssml(
-            user_language=prep_session.lng,
-            target_language=question.quiz.lng,
+            user_language=quiz.lng,
+            target_language=quiz.target_lng,
             prompt=question.question_text,
             audio_file=audio_file_path
         )

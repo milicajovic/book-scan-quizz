@@ -80,7 +80,7 @@ def create():
     form = CreateQuizForm()
     if form.validate_on_submit():
         try:
-            quiz = save_quiz(form.title.data, form.lng.data, form.type.data)
+            quiz = save_quiz(form.title.data, form.lng.data, form.type.data, form.target_lng.data)
             uploaded_images = process_uploaded_images(form.images.data, quiz.id)
             generate_and_save_questions(uploaded_images, quiz.id)
             if not form.title.data:
@@ -97,9 +97,9 @@ def create():
 
     return render_template('quiz/create.html', form=form)
 
-def save_quiz(title, language, quiz_type):
+def save_quiz(title, language, quiz_type, target_language):
     try:
-        quiz = Quiz(title=title, lng=language, type=quiz_type, user_owner_id=current_user.id)
+        quiz = Quiz(title=title, lng=language, type=quiz_type, target_lng=target_language, user_owner_id=current_user.id)
         db.session.add(quiz)
         db.session.flush()  # To get the quiz id
         return quiz
@@ -119,6 +119,7 @@ def edit(quiz_id):
         quiz.title = form.title.data
         quiz.lng = form.lng.data
         quiz.type = form.type.data
+        quiz.target_lng = form.target_lng.data
 
         uploaded_images = []
         for image in form.images.data:

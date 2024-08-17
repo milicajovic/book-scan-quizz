@@ -16,6 +16,7 @@ def get_language_choices():
 class CreateQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[Optional()])  # Changed from DataRequired() to Optional()
     lng = SelectField('Quiz Language', choices=get_language_choices(), validators=[DataRequired()])
+    target_lng = SelectField('Target Language', choices=get_language_choices(), validators=[Optional()])
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Images', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
@@ -26,6 +27,7 @@ class CreateQuizForm(FlaskForm):
 class EditQuizForm(FlaskForm):
     title = StringField('Quiz Title', validators=[DataRequired()])
     lng = SelectField('Quiz Language', choices=get_language_choices(), validators=[DataRequired()])
+    target_lng = SelectField('Target Language', choices=get_language_choices(), validators=[Optional()])
     type = SelectField('Quiz Type', choices=[(qt.name, qt.value) for qt in QuizType], validators=[DataRequired()])
     images = MultipleFileField('Upload Additional Images', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
