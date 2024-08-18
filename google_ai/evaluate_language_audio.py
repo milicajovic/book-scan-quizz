@@ -46,7 +46,7 @@ def evaluate_language_audio(
         Speaking prompt: '{prompt}'
 
         """
-        #print(evaluation_prompt)
+        print(evaluation_prompt)
         # print(audio_file)
 
         file = genai.upload_file(audio_file, mime_type="audio/wav")
