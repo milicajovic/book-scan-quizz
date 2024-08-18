@@ -13,5 +13,5 @@ DUMMY_SERBIAN = os.path.join(TEST_AUDIO_DIR, 'dummy_serbian.wav')
 GERMAN_WRONG = os.path.join(TEST_AUDIO_DIR, 'german_wrong_sentence.wav')
 PHOTOSYNTHESIS_AUDIO = os.path.join(TEST_AUDIO_DIR, 'dummy_serbian.wav')
 EMPTY_AUDIO = os.path.join(TEST_AUDIO_DIR, 'no_text_audio.wav')
-
+I_FORGOT_AUDIO = os.path.join(TEST_AUDIO_DIR, 'sorry_forgotten.wav')
 # You can add more configurations here as needed

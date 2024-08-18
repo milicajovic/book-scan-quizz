@@ -51,6 +51,28 @@ class TestAudioLanguageEvaluator(unittest.TestCase):
         except Exception as e:
             self.fail(f"Unexpected error occurred: {str(e)}")
 
+    def test_sorry__audio_answer(self):
+        try:
+            result = list(evaluate_language_audio("hr",
+                                                  "de",
+                                                  self.question, self.audio_path))
+
+            print(result)
+            # Check if we got a non-empty result
+            self.assertTrue(len(result) > 0)
+
+            # Check if the result contains expected parts
+            full_response = ''.join(result)
+            self.assertIn('####', full_response)
+
+            print("Full response:")
+            print(full_response)
+
+        except exceptions.GoogleAPICallError as e:
+            self.fail(f"Google API call failed: {str(e)}")
+        except Exception as e:
+            self.fail(f"Unexpected error occurred: {str(e)}")
+
     def test_empty_audio_(self):
         try:
             #question = "In welchem Jahr startete die französische Armee ihren Russlandfeldzug?"

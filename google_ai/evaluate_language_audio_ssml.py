@@ -1,19 +1,8 @@
 import google.generativeai as genai
 from flask import current_app
-from .config import GENERATION_CONFIG, SAFETY_SETTINGS, DEFAULT_MODEL
+from .config import GENERATION_CONFIG, SAFETY_SETTINGS, DEFAULT_MODEL, SHARED_LANGUAGE_EVALUATION_PROMPT
 
-LANGUAGE_EVALUATION_PROMPT = """
-You are an AI language tutor evaluating a learner's spoken response. You will receive:
-1. The user's native language (user_language)
-2. The language they are learning (target_language)
-3. The prompt given to the learner
-4. An audio file of the learner's response, which is already uploaded in this chat.
-
-Your task is to:
-1. Evaluate the response for pronunciation, grammar, and content relevance
-2. Provide friendly, constructive feedback in the user's native language. Do not repeat users answer
-3. Give a score from 1-10 for each aspect: pronunciation, grammar, and content
-
+FORMATTING_PROMPT = """
 
 Format your response as valid SSML (Speech Synthesis Markup Language) with the following structure:
 
@@ -73,7 +62,7 @@ def evaluate_language_audio_ssml(
         )
 
         evaluation_prompt = f"""
-        {LANGUAGE_EVALUATION_PROMPT}
+        {SHARED_LANGUAGE_EVALUATION_PROMPT+FORMATTING_PROMPT}
 
         User's native language: {user_language}
         Language being learned: {target_language}
