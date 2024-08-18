@@ -60,6 +60,7 @@
     {% endfor %}
 
     <div class="mt-4">
+        <a href="{{ url_for('quiz.dispatch', quiz_id=session.quiz_id) }}" class="btn btn-success me-2">Retake Quiz</a>
         <a href="{{ url_for('quiz.index') }}" class="btn btn-primary">Back to Quizzes</a>
     </div>
 </div>
