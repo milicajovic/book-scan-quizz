@@ -4,9 +4,9 @@ from flask_migrate import Migrate
 #from app.models.user import User
 #from app.models.models import Quiz, Question, Answer, PageScan
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-migrate = Migrate(app, db)
-from flask_migrate import Migrate
+app = create_app()
+# migrate = Migrate(app, db)
+# from flask_migrate import Migrate
 #
 # @app.cli.command("init-db")
 # def init_db():
@@ -14,7 +14,7 @@ from flask_migrate import Migrate
 #     print("Database tables created.")
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    # with app.app_context():
+    #     db.create_all()
     #app.run()
     app.run(debug=True)

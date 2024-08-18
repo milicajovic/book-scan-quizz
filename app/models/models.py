@@ -10,6 +10,11 @@ class QuizType(Enum):
     LANGUAGE = "Language"
     QUESTIONS = "Questions"
 
+class DifficultyLevel(Enum):
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+    
 class Quiz(db.Model):
     __tablename__ = 'quiz'
 
@@ -41,9 +46,8 @@ class Question(db.Model):
     page_scan_id = Column(String(36), ForeignKey('page_scan.id'))
     question_text = Column(String(1000))
     answer = Column(String(1000))
-    difficulty_level = Column(db.Integer)
     position = Column(Integer)
-
+    difficulty_level = Column(String(20), nullable=False, default=DifficultyLevel.MEDIUM)
     quiz = relationship("Quiz", back_populates="questions")
     page_scan = relationship("PageScan", back_populates="questions")
     answers = relationship("Answer", back_populates="question")
