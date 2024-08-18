@@ -98,3 +98,11 @@ def play_audio():
     except Exception as e:
         current_app.logger.error(f"Audio playback failed: {str(e)}")
         return jsonify({'error': 'Audio playback failed. Tough luck.'}), 500
+
+@main.route('/voice-activation')
+def voice_activation():
+    return render_template('/experiments/voice_activation.html')
+
+@main.route('/human-detection')
+def human_detection():
+    return render_template('/experiments/human_detection.html')

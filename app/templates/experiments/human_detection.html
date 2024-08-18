@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Human Detection using Webcam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+    <h1>Human Detection using Webcam</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <div id="result"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resultDiv = document.getElementById('result');
+
+        let model;
+
+        // Load the COCO-SSD model
+        cocoSsd.load().then(loadedModel => {
+            model = loadedModel;
+            console.log('Model loaded successfully');
+            // Start video stream once the model is loaded
+            startVideo();
+        });
+
+        // Start video stream
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.addEventListener('loadeddata', predictWebcam);
+                })
+                .catch(error => {
+                    console.error('Error accessing webcam:', error);
+                });
+        }
+
+        // Predict function
+        function predictWebcam() {
+            model.detect(video).then(predictions => {
+                // Clear previous drawings
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw video frame on canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                let humansDetected = 0;
+
+                // Process each prediction
+                predictions.forEach(prediction => {
+                    if (prediction.class === 'person') {
+                        humansDetected++;
+
+                        // Draw bounding box
+                        ctx.beginPath();
+                        ctx.rect(...prediction.bbox);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = 'red';
+                        ctx.fillStyle = 'red';
+                        ctx.stroke();
+                        ctx.fillText(
+                            `${prediction.class} (${Math.round(prediction.score * 100)}%)`,
+                            prediction.bbox[0],
+                            prediction.bbox[1] > 10 ? prediction.bbox[1] - 5 : 10
+                        );
+                    }
+                });
+
+                // Update result
+                resultDiv.textContent = `Humans detected: ${humansDetected}`;
+
+                // Call this function again to keep predicting
+                requestAnimationFrame(predictWebcam);
+            });
+        }
+    </script>
+</body>
+</html>
